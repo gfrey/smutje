@@ -1,0 +1,8 @@
+server {
+    listen 8088 default_server;
+    root /srv/tftp;
+    server_name _;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

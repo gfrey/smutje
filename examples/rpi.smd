@@ -1,0 +1,21 @@
+# Template: Raspbian Base Config [rpi]
+
+
+## Package: Package Update [pkg]
+
+    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get upgrade -y
+
+
+## Package: Module Configuration [mod_cfg]
+
+Disable the sound module.
+
+    sed -i -e "s/^snd-bcm2835$/# snd-bcm2835/" /etc/modules
+
+
+## Package: SSHD Configuration [sshd_cfg]
+
+Disable the DNS lookup on SSH connect. Should improve slow login.
+
+    grep "UseDNS" /etc/ssh/sshd_config || { echo "UseDNS no" >> /etc/ssh/sshd_config; }
+    /etc/init.d/ssh restart

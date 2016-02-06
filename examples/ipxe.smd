@@ -1,0 +1,88 @@
+# Resource: SmartOS iPXE Server [ipxe]
+
+The host is assumed to be a Raspbian wheezy based rPI!
+
+This host offers DHCP and especially serves an iPXE file to the requiring hosts
+thereby making updates pretty easy (just update the `SMARTOS_VERSION`
+attribute).
+
+Please note that TFTP is only used to serve the iPXE file. Everything else is
+sent out by the nginx configured, too. This is as HTTP is much faster than TFTP
+and this is serving pretty big files.
+
+> Address: 172.19.1.254
+> Username: pi
+
+> SMARTOS_VERSION: 20160218T022556Z
+
+
+## Include: rpi.smd [rpi]
+
+The basic Raspbian configuration.
+
+
+## Package: Network Setup [net]
+
+The host must have a static IP as it should serve as DHCP server. So we give it
+the venerable `172.19.1.254`.
+
+    grep "interface eth0" /etc/dhcpcd.conf || cat <<-EOF >> /etc/dhcpcd.conf
+    	# Static IP for the eth0 interface
+    	interface eth0
+    	static ip_address=172.19.1.254/24
+    	static routers=172.19.1.1
+    	static domain_name_servers=172.19.1.1
+    EOF
+
+
+## Package: TFTP [tftp]
+
+The TFTP server is required to deliver the files.
+
+    DEBIAN_FRONTEND=noninteractive apt-get install -y tftpd
+    mkdir -p /srv/tftp
+
+Write the iPXE stuff to the tftp server.
+
+    :write_file ipxe/undionly.kpxe /srv/tftp/undionly.kpxe
+
+    :write_template ipxe/menu.ipxe /srv/tftp/menu.ipxe
+
+Now download and extract the given platform release from SmartOS.
+
+    cd /srv/tftp
+    export SmartOS_VERSION="{{ .SMARTOS_VERSION }}"
+    export RELEASE_URL=https://us-east.manta.joyent.com/Joyent_Dev/public/builds/smartos/release-${SmartOS_VERSION:0:8}-${SmartOS_VERSION}/smartos
+    curl -sSO ${RELEASE_URL}/platform-${SmartOS_VERSION}.tgz
+    # curl -sS ${RELEASE_URL}/md5sums.txt | grep tgz | md5sum -c -
+
+    cd /srv/tftp
+    tar xvfz platform-{{ .SMARTOS_VERSION }}.tgz
+    mkdir -p smartos/{{ .SMARTOS_VERSION }}
+    mv platform-{{ .SMARTOS_VERSION }} smartos/{{ .SMARTOS_VERSION }}/platform
+
+    rm -f /srv/tftp/*.tgz
+
+
+## Package: DHCPD [dhcpd]
+
+The DHCP server is installed and configured to serve IPs and the iPXE boot
+file.
+
+    DEBIAN_FRONTEND=noninteractive apt-get install -y isc-dhcp-server
+
+    :write_file ipxe/dhcpd.conf /etc/dhcp/dhcpd.conf
+
+
+## Package: NGinx [nginx]
+
+The Nginx is installed and configured to also serve the TFTP srv directory, as
+the HTTP protocol is much faster than TFTP.
+
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+    rm -f /etc/nginx/sites-enabled/default
+
+    :write_file ipxe/nginx_ipxe_files /etc/nginx/sites-available/ipxe_files
+
+    ln -fs /etc/nginx/sites-available/ipxe_files /etc/nginx/sites-enabled/ipxe_files
+    nginx -t && /etc/init.d/nginx restart
