@@ -1,0 +1,39 @@
+# Resource: asterix.example.org [asterix]
+
+This is an example host that with some basic settings.
+
+> IP: 192.168.1.1
+> User: peter
+
+> FILE_VERSION: 0.1.32
+
+
+## Package: Base Configuration [base]
+
+This will create the basic configuration for the host, i.e. will set up
+some basic features.
+
+First the apt packages are updated and some basic tools installed.
+
+    apt-get update && apt-get upgrade -y
+    apt-get install ntp
+
+Next the some files are added.
+
+    :write_file testdata/hosts /etc/hosts
+    :write_template testdata/bashrc /root/.bashrc
+
+
+## Package: Install Nginx [nginx]
+
+Nginx should be installed. The script has some empty line in it.
+
+    apt-get install nginx
+    
+    systemctl enable nginx
+
+
+## Include: testdata/test_pkgset.smd [sub]
+
+> Variable: A
+

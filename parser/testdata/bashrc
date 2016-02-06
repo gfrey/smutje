@@ -1,0 +1,1 @@
+# must exist for testing sake (bashrc {{ .Attribute "FILE_VERSION" }})
