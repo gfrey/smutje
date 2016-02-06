@@ -1,0 +1,15 @@
+# Resource: HandleChild Test [handle_child]
+
+> HC_Key: 1
+> Address: example.org
+
+
+## Include: testdata/test_handle_child_tmpl.smd [inc]
+
+> HCI_Key: 2
+
+## Package: HC Pkg [pkg3]
+
+> HC_Pkg_Key: 5
+
+	echo do something entirely else

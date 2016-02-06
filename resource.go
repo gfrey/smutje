@@ -170,6 +170,12 @@ func handleChild(parentID string, node *parser.AstNode) ([]*smPackage, smAttribu
 			return nil, nil, err
 		}
 		pkgs = append(pkgs, pkg)
+	case parser.AstInclude:
+		newPkgs, err := newInclude(parentID, node)
+		if err != nil {
+			return nil, nil, err
+		}
+		pkgs = append(pkgs, newPkgs...)
 	case parser.AstText:
 	// ignore
 	default:
