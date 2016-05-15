@@ -2,18 +2,20 @@ package smutje
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"os"
 
 	"github.com/gfrey/smutje/parser"
 )
 
-func newInclude(parentID string, n *parser.AstNode) ([]*smPackage, error) {
+func newInclude(parentID, path string, n *parser.AstNode) ([]*smPackage, error) {
 	if n.Type != parser.AstInclude {
 		return nil, fmt.Errorf("expected include node, got %s", n.Type)
 	}
 
-	switch _, err := os.Lstat(n.Name); {
+	filename := filepath.Join(path, n.Name)
+	switch _, err := os.Lstat(filename); {
 	case os.IsNotExist(err):
 		return nil, fmt.Errorf("template %s does not exist!", n.Name)
 	case err != nil:
@@ -41,7 +43,7 @@ func newInclude(parentID string, n *parser.AstNode) ([]*smPackage, error) {
 		nodeID = parentID + "." + n.ID
 	}
 
-	return parseTemplate(n.Name, nodeID, attrs)
+	return parseTemplate(filename, nodeID, attrs)
 }
 
 func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage, error) {
@@ -65,7 +67,7 @@ func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage,
 			}
 			attrs.MergeInplace(newAttrs)
 		default:
-			npkgs, nattrs, err := handleChild(parentID, child)
+			npkgs, nattrs, err := handleChild(parentID, filepath.Dir(filename), child)
 			if err != nil {
 				return nil, err
 			}

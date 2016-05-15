@@ -14,14 +14,14 @@ type smScript interface {
 	Hash() string
 }
 
-func newScript(n *parser.AstNode) (smScript, error) {
+func newScript(path string, n *parser.AstNode) (smScript, error) {
 	if n.Type != parser.AstScript {
 		return nil, fmt.Errorf("expected script node, got %s", n.Type)
 	}
 
 	switch s := n.Value.(type) {
 	case *parser.SmutjeScript:
-		return &smutjeScript{ID: n.ID, rawCommand: s.Command}, nil
+		return &smutjeScript{Path: path, ID: n.ID, rawCommand: s.Command}, nil
 	case *parser.BashScript:
 		return &bashScript{ID: n.ID, Script: s.Script}, nil
 	default:

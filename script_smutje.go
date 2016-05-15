@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gfrey/smutje/connection"
@@ -13,6 +14,7 @@ import (
 
 type smutjeScript struct {
 	ID         string
+	Path       string
 	rawCommand string
 	Command    smScript
 }
@@ -45,9 +47,9 @@ func (s *smutjeScript) initCommands(attrs smAttributes) error {
 	}
 	switch strings.ToLower(args[0]) {
 	case ":write_file":
-		s.Command, err = newExecWriteFileCmd(args[1:])
+		s.Command, err = newExecWriteFileCmd(s.Path, args[1:])
 	case ":write_template":
-		s.Command, err = newExecWriteTemplateCmd(args[1:])
+		s.Command, err = newExecWriteTemplateCmd(s.Path, args[1:])
 	default:
 		return fmt.Errorf("command %s unknown", args[0])
 	}
@@ -67,16 +69,17 @@ type execWriteFileCmd struct {
 	size  int64
 }
 
-func newExecWriteFileCmd(args []string) (*execWriteFileCmd, error) {
+func newExecWriteFileCmd(path string, args []string) (*execWriteFileCmd, error) {
 	if len(args) < 2 || len(args) == 3 || len(args) > 4 {
 		return nil, fmt.Errorf(`syntax error: write file/template usage ":write_file <source> <target> [<user> <umask>]?"`)
 	}
 
-	if _, err := os.Stat(args[0]); err != nil {
+	filename := filepath.Join(path, args[0])
+	if _, err := os.Stat(filename); err != nil {
 		return nil, err
 	}
 
-	cmd := &execWriteFileCmd{Source: args[0], Target: args[1], Render: false}
+	cmd := &execWriteFileCmd{Source: filename, Target: args[1], Render: false}
 
 	if len(args) > 2 {
 		cmd.Owner = args[2]
@@ -86,8 +89,8 @@ func newExecWriteFileCmd(args []string) (*execWriteFileCmd, error) {
 	return cmd, nil
 }
 
-func newExecWriteTemplateCmd(args []string) (*execWriteFileCmd, error) {
-	cmd, err := newExecWriteFileCmd(args)
+func newExecWriteTemplateCmd(path string, args []string) (*execWriteFileCmd, error) {
+	cmd, err := newExecWriteFileCmd(path, args)
 	if err != nil {
 		return nil, err
 	}

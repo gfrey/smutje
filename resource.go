@@ -29,7 +29,7 @@ type smResource struct {
 	isVirtual bool
 }
 
-func newResource(n *parser.AstNode) (*smResource, error) {
+func newResource(path string, n *parser.AstNode) (*smResource, error) {
 	res := new(smResource)
 	res.Attributes = smAttributes{}
 	res.ID = n.ID
@@ -46,7 +46,7 @@ func newResource(n *parser.AstNode) (*smResource, error) {
 			}
 			res.Blueprint = blueprint
 		default:
-			pkgs, attrs, err := handleChild("", child)
+			pkgs, attrs, err := handleChild("", path, child)
 			if err != nil {
 				return nil, err
 			}
@@ -154,7 +154,7 @@ func (res *smResource) initializeClient() (err error) {
 	}
 }
 
-func handleChild(parentID string, node *parser.AstNode) ([]*smPackage, smAttributes, error) {
+func handleChild(parentID, path string, node *parser.AstNode) ([]*smPackage, smAttributes, error) {
 	attrs := smAttributes{}
 	pkgs := []*smPackage{}
 	switch node.Type {
@@ -165,13 +165,13 @@ func handleChild(parentID string, node *parser.AstNode) ([]*smPackage, smAttribu
 		}
 		attrs.MergeInplace(newAttrs)
 	case parser.AstPackage:
-		pkg, err := newPackage(parentID, node)
+		pkg, err := newPackage(parentID, path, node)
 		if err != nil {
 			return nil, nil, err
 		}
 		pkgs = append(pkgs, pkg)
 	case parser.AstInclude:
-		newPkgs, err := newInclude(parentID, node)
+		newPkgs, err := newInclude(parentID, path, node)
 		if err != nil {
 			return nil, nil, err
 		}

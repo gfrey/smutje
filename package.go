@@ -25,7 +25,7 @@ type smPackage struct {
 	isDirty bool
 }
 
-func newPackage(parentID string, n *parser.AstNode) (*smPackage, error) {
+func newPackage(parentID, path string, n *parser.AstNode) (*smPackage, error) {
 	if n.Type != parser.AstPackage {
 		return nil, fmt.Errorf("expected package node, got %s", n.Type)
 	}
@@ -48,7 +48,7 @@ func newPackage(parentID string, n *parser.AstNode) (*smPackage, error) {
 			pkg.Attributes = pkg.Attributes.Merge(attrs)
 		case parser.AstScript:
 			child.ID = pkg.ID + "_" + strconv.Itoa(len(pkg.Scripts))
-			script, err := newScript(child)
+			script, err := newScript(path, child)
 			if err != nil {
 				return nil, err
 			}
