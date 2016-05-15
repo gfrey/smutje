@@ -31,10 +31,10 @@ type smResource struct {
 
 func newResource(path string, n *parser.AstNode) (*smResource, error) {
 	res := new(smResource)
-	res.Attributes = smAttributes{}
 	res.ID = n.ID
 	res.Name = n.Name
 
+	res.Attributes = smAttributes{}
 	res.Attributes["Hostname"] = n.ID
 
 	for _, child := range n.Children {
@@ -46,12 +46,11 @@ func newResource(path string, n *parser.AstNode) (*smResource, error) {
 			}
 			res.Blueprint = blueprint
 		default:
-			pkgs, attrs, err := handleChild("", path, child)
+			pkgs, err := handleChild("", path, res.Attributes, child)
 			if err != nil {
 				return nil, err
 			}
 			res.Packages = append(res.Packages, pkgs...)
-			res.Attributes = res.Attributes.Merge(attrs)
 		}
 	}
 
@@ -154,33 +153,34 @@ func (res *smResource) initializeClient() (err error) {
 	}
 }
 
-func handleChild(parentID, path string, node *parser.AstNode) ([]*smPackage, smAttributes, error) {
-	attrs := smAttributes{}
+func handleChild(parentID, path string, attrs smAttributes, node *parser.AstNode) ([]*smPackage, error) {
 	pkgs := []*smPackage{}
 	switch node.Type {
 	case parser.AstAttributes:
 		newAttrs, err := newAttributes(node)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
-		attrs.MergeInplace(newAttrs)
+		if err := attrs.MergeInplace(newAttrs); err != nil {
+			return nil, err
+		}
 	case parser.AstPackage:
-		pkg, err := newPackage(parentID, path, node)
+		pkg, err := newPackage(parentID, path, attrs, node)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		pkgs = append(pkgs, pkg)
 	case parser.AstInclude:
-		newPkgs, err := newInclude(parentID, path, node)
+		newPkgs, err := newInclude(parentID, path, attrs, node)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		pkgs = append(pkgs, newPkgs...)
 	case parser.AstText:
 	// ignore
 	default:
-		return nil, nil, fmt.Errorf("unexpected node seen: %s", node.Type)
+		return nil, fmt.Errorf("unexpected node seen: %s", node.Type)
 	}
 
-	return pkgs, attrs, nil
+	return pkgs, nil
 }

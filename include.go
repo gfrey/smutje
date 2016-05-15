@@ -9,7 +9,7 @@ import (
 	"github.com/gfrey/smutje/parser"
 )
 
-func newInclude(parentID, path string, n *parser.AstNode) ([]*smPackage, error) {
+func newInclude(parentID, path string, attrs smAttributes, n *parser.AstNode) ([]*smPackage, error) {
 	if n.Type != parser.AstInclude {
 		return nil, fmt.Errorf("expected include node, got %s", n.Type)
 	}
@@ -22,7 +22,7 @@ func newInclude(parentID, path string, n *parser.AstNode) ([]*smPackage, error) 
 		return nil, err
 	}
 
-	attrs := smAttributes{}
+	incAttrs := attrs.Copy()
 	for _, child := range n.Children {
 		switch child.Type {
 		case parser.AstAttributes:
@@ -30,7 +30,9 @@ func newInclude(parentID, path string, n *parser.AstNode) ([]*smPackage, error) 
 			if err != nil {
 				return nil, err
 			}
-			attrs = attrs.Merge(a)
+			if err := incAttrs.MergeInplace(a); err != nil {
+				return nil, err
+			}
 		case parser.AstText:
 			// ignore
 		default:
@@ -43,7 +45,7 @@ func newInclude(parentID, path string, n *parser.AstNode) ([]*smPackage, error) 
 		nodeID = parentID + "." + n.ID
 	}
 
-	return parseTemplate(filename, nodeID, attrs)
+	return parseTemplate(filename, nodeID, incAttrs)
 }
 
 func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage, error) {
@@ -57,7 +59,7 @@ func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage,
 	}
 
 	pkgs := []*smPackage{}
-
+	tmplAttrs := attrs.Copy()
 	for _, child := range n.Children {
 		switch child.Type {
 		case parser.AstAttributes:
@@ -65,17 +67,14 @@ func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage,
 			if err != nil {
 				return nil, err
 			}
-			attrs.MergeInplace(newAttrs)
+			tmplAttrs.MergeInplace(newAttrs)
 		default:
-			npkgs, nattrs, err := handleChild(parentID, filepath.Dir(filename), child)
+			npkgs, err := handleChild(parentID, filepath.Dir(filename), tmplAttrs, child)
 			if err != nil {
 				return nil, err
 			}
 
-			for _, pkg := range npkgs {
-				pkg.Attributes = attrs.Merge(nattrs).Merge(pkg.Attributes)
-				pkgs = append(pkgs, pkg)
-			}
+			pkgs = append(pkgs, npkgs...)
 		}
 	}
 

@@ -25,7 +25,7 @@ type smPackage struct {
 	isDirty bool
 }
 
-func newPackage(parentID, path string, n *parser.AstNode) (*smPackage, error) {
+func newPackage(parentID, path string, attrs smAttributes, n *parser.AstNode) (*smPackage, error) {
 	if n.Type != parser.AstPackage {
 		return nil, fmt.Errorf("expected package node, got %s", n.Type)
 	}
@@ -38,6 +38,7 @@ func newPackage(parentID, path string, n *parser.AstNode) (*smPackage, error) {
 		pkg.ID = parentID + "." + n.ID
 	}
 
+	pkg.Attributes = attrs.Copy()
 	for _, child := range n.Children {
 		switch child.Type {
 		case parser.AstAttributes:
@@ -45,7 +46,9 @@ func newPackage(parentID, path string, n *parser.AstNode) (*smPackage, error) {
 			if err != nil {
 				return nil, err
 			}
-			pkg.Attributes = pkg.Attributes.Merge(attrs)
+			if err := pkg.Attributes.MergeInplace(attrs); err != nil {
+				return nil, err
+			}
 		case parser.AstScript:
 			child.ID = pkg.ID + "_" + strconv.Itoa(len(pkg.Scripts))
 			script, err := newScript(path, child)
@@ -73,7 +76,11 @@ func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err
 
 	hash := ""
 	for i, s := range pkg.Scripts {
-		hash, err = s.Prepare(attrs.Merge(pkg.Attributes), hash)
+		sattrs, err := attrs.Merge(pkg.Attributes)
+		if err != nil {
+			return err
+		}
+		hash, err = s.Prepare(sattrs, hash)
 		if err != nil {
 			return err
 		}
