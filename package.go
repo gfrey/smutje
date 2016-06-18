@@ -145,7 +145,7 @@ func (pkg *smPackage) readPackageState(client connection.Client) ([]string, erro
 	}
 
 	fname := fmt.Sprintf("/var/lib/smutje/%s.log", pkg.ID)
-	cmd := fmt.Sprintf(`bash -c "if [ -f %[1]q ]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi"`, fname)
+	cmd := fmt.Sprintf(`bash -c "if [[ -f %[1]q ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi"`, fname)
 	if err := sess.Start(cmd); err != nil {
 		return nil, err
 	}
