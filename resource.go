@@ -137,6 +137,7 @@ func (res *smResource) initializeClient() (err error) {
 
 	switch {
 	case res.isVirtual:
+		res.Attributes["HypervisorAddress"] = res.address
 		res.hypervisor, err = hypervisor.New(res.Attributes["Hypervisor"], res.address, res.username)
 		if err != nil {
 			return err
