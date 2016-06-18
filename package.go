@@ -92,13 +92,25 @@ func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err
 	return nil
 }
 
-func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) error {
+func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) (err error) {
 	l = l.Tag(pkg.ID)
 
 	oldState := pkg.state
 	pkg.state = make([]string, len(pkg.Scripts))
 
 	allCached := true
+
+	defer func() {
+		if allCached {
+			return
+		}
+
+		e := pkg.writeTargetState(client)
+		if err == nil {
+			err = e
+		}
+	}()
+
 	for i, s := range pkg.Scripts {
 		hash := s.Hash()
 
@@ -109,7 +121,7 @@ func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) error
 		}
 
 		allCached = false
-		if err := s.Exec(l, client); err != nil {
+		if err = s.Exec(l, client); err != nil {
 			l.Printf("failed in %s", hash)
 			pkg.state[i] = "-" + hash
 			pkg.state = pkg.state[:i+1]
@@ -117,12 +129,7 @@ func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) error
 		}
 		pkg.state[i] = "+" + hash
 	}
-
-	if allCached {
-		return nil
-	}
-
-	return pkg.writeTargetState(client)
+	return nil
 }
 
 func (pkg *smPackage) readPackageState(client connection.Client) ([]string, error) {
