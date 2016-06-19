@@ -75,6 +75,11 @@ func (res *smResource) Prepare(l logger.Logger) error {
 func (res *smResource) Generate(l logger.Logger) (err error) {
 	if res.isVirtual && res.client == nil {
 		if res.uuid == "" {
+			res.Blueprint, err = renderString(res.ID+"/blueprint", res.Blueprint, res.Attributes)
+			if err != nil {
+				return err
+			}
+
 			res.uuid, err = res.hypervisor.Create(l, res.Blueprint)
 			if err != nil {
 				return err
