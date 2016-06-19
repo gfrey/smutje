@@ -163,9 +163,12 @@ func newExecWriteFileCmd(path string, args []string) (*execWriteFileCmd, error) 
 		return nil, fmt.Errorf(`syntax error: write file/template usage ":write_file <source> <target> [<user> <umask>]?"`)
 	}
 
-	filename := filepath.Join(path, args[0])
-	if _, err := os.Stat(filename); err != nil {
-		return nil, err
+	filename := args[0]
+	if filename[0] != '/' {
+		filename = filepath.Join(path, args[0])
+		if _, err := os.Stat(filename); err != nil {
+			return nil, err
+		}
 	}
 
 	cmd := &execWriteFileCmd{Source: filename, Target: args[1], Render: false}
