@@ -1,10 +1,13 @@
 # Template: HandeChild Test [hc_tmpl]
 
 > HCT_Key: 3
+> HCI_Key: 3
 
 ## Package: HCI Test [ipkg1]
 
 > HCT_Pkg_Key: 4
+> HC_Overwritten_Key: 3
+> HCI_Key: 4
 
 	echo do something
 
@@ -12,5 +15,6 @@
 ## Package: HCI Test [ipkg2]
 
 > HCT_Pkg_Key: 5
+> HC_Overwritten_Key: 4
 
 	echo do something else

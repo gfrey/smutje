@@ -46,7 +46,8 @@ func newPackage(parentID, path string, attrs smAttributes, n *parser.AstNode) (*
 			if err != nil {
 				return nil, err
 			}
-			if err := pkg.Attributes.MergeInplace(attrs); err != nil {
+			pkg.Attributes, err = attrs.Merge(pkg.Attributes)
+			if err != nil {
 				return nil, err
 			}
 		case parser.AstScript:
