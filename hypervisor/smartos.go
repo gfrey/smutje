@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
+	"github.com/pkg/errors"
 )
 
 type smartOS struct {
@@ -74,7 +74,7 @@ func (hp *smartOS) UUID(alias string) (string, error) {
 func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
 	m := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(blueprint), &m); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to unmarshal the blueprint")
 	}
 
 	l.Printf("updating the image database")
@@ -101,7 +101,7 @@ func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
 	outBuf := bytes.NewBuffer(nil)
 	stderr, err := sess.StderrPipe()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to retrieve stderr pipe")
 	}
 	go func() {
 		defer wg.Done()
@@ -110,7 +110,7 @@ func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
 
 	stdin, err := sess.StdinPipe()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to retrieve stdin pipe")
 	}
 	go func() {
 		defer wg.Done()
@@ -129,7 +129,7 @@ func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
 	output := strings.TrimSpace(outBuf.String())
 	expResponsePrefix := "Successfully created VM "
 	if !strings.HasPrefix(output, expResponsePrefix) {
-		return "", fmt.Errorf("wrong response received: %s", output)
+		return "", errors.Errorf("wrong response received: %s", output)
 	}
 
 	return strings.TrimPrefix(output, expResponsePrefix), nil

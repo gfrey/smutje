@@ -5,12 +5,14 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func Parse(filename string) (*AstNode, error) {
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read file")
 	}
 
 	return parse(filename, lex(string(input)))
@@ -56,7 +58,7 @@ func (p *parser) backupN(n int) {
 
 func (p *parser) syntaxErrorf(i item, msg string, args ...interface{}) error {
 	prefix := fmt.Sprintf("%s:%d: ", p.filename, i.line)
-	return fmt.Errorf(prefix+msg, args...)
+	return errors.Errorf(prefix+msg, args...)
 }
 
 var reTitle = regexp.MustCompile(`^(\w+):[ ]*(.*)[ ]*\[(\w+)\]$`)

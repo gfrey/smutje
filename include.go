@@ -1,23 +1,23 @@
 package smutje
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"os"
 
 	"github.com/gfrey/smutje/parser"
+	"github.com/pkg/errors"
 )
 
 func newInclude(parentID, path string, attrs smAttributes, n *parser.AstNode) ([]*smPackage, error) {
 	if n.Type != parser.AstInclude {
-		return nil, fmt.Errorf("expected include node, got %s", n.Type)
+		return nil, errors.Errorf("expected include node, got %s", n.Type)
 	}
 
 	filename := filepath.Join(path, n.Name)
 	switch _, err := os.Lstat(filename); {
 	case os.IsNotExist(err):
-		return nil, fmt.Errorf("template %s does not exist!", n.Name)
+		return nil, errors.Errorf("template %s does not exist!", n.Name)
 	case err != nil:
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func newInclude(parentID, path string, attrs smAttributes, n *parser.AstNode) ([
 		case parser.AstText:
 			// ignore
 		default:
-			return nil, fmt.Errorf("unexpected node seen: %s", child.Type)
+			return nil, errors.Errorf("unexpected node seen: %s", child.Type)
 		}
 	}
 
@@ -55,7 +55,7 @@ func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage,
 	}
 
 	if n.Type != parser.AstTemplate {
-		return nil, fmt.Errorf("expected template node, got %s", n.Type)
+		return nil, errors.Errorf("expected template node, got %s", n.Type)
 	}
 
 	pkgs := []*smPackage{}

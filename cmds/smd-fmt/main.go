@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gfrey/smutje/parser"
+	"github.com/pkg/errors"
 )
 
 func main() {
@@ -20,9 +21,9 @@ func run() error {
 		stat, err := os.Lstat(file)
 		switch {
 		case os.IsNotExist(err):
-			return fmt.Errorf("file %q does not exist", file)
+			return errors.Errorf("file %q does not exist", file)
 		case err != nil:
-			return err
+			return errors.Wrap(err, "failed to stat smd file")
 		}
 
 		astNode, err := parser.Parse(file)
@@ -32,7 +33,7 @@ func run() error {
 
 		err = ioutil.WriteFile(file, []byte(astNode.String()), stat.Mode().Perm())
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to write file")
 		}
 	}
 	return nil

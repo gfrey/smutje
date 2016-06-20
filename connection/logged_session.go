@@ -2,11 +2,11 @@ package connection
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"sync"
 
 	"github.com/gfrey/smutje/logger"
+	"github.com/pkg/errors"
 )
 
 type loggedSession struct {
@@ -20,12 +20,12 @@ func newLoggedSession(l logger.Logger, sess Session) (Session, error) {
 
 	stdout, err := s.Session.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to build stdout pipe")
 	}
 
 	stderr, err := s.Session.StderrPipe()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to build stderr pipe")
 	}
 
 	s.wg.Add(2)
@@ -42,11 +42,11 @@ func (lsess *loggedSession) Close() error {
 }
 
 func (lsess *loggedSession) StdoutPipe() (io.Reader, error) {
-	return nil, fmt.Errorf("logged session has no access to stdout pipe!")
+	return nil, errors.New("logged session has no access to stdout pipe!")
 }
 
 func (lsess *loggedSession) StderrPipe() (io.Reader, error) {
-	return nil, fmt.Errorf("logged session has no access to stderr pipe!")
+	return nil, errors.New("logged session has no access to stderr pipe!")
 }
 
 func (lsess *loggedSession) readStream(l logger.Logger, stream io.Reader) {

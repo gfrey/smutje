@@ -9,6 +9,7 @@ import (
 	"github.com/gfrey/smutje/hypervisor"
 	"github.com/gfrey/smutje/logger"
 	"github.com/gfrey/smutje/parser"
+	"github.com/pkg/errors"
 )
 
 type smResource struct {
@@ -118,10 +119,10 @@ func (res *smResource) initializeClient() (err error) {
 	case ok:
 		res.isVirtual = true
 		if res.address, ok = res.Attributes["Host"]; !ok {
-			return fmt.Errorf("Virtual resource host attribute (%q) not specified", "Host")
+			return errors.Errorf("Virtual resource host attribute (%q) not specified", "Host")
 		}
 	case res.Blueprint != "":
-		return fmt.Errorf("hypervisor attribute required for blueprint to be supported!")
+		return errors.Errorf("hypervisor attribute required for blueprint to be supported!")
 	default:
 		res.address, ok = res.Attributes["Address"]
 		if !ok {
@@ -188,7 +189,7 @@ func handleChild(parentID, path string, attrs smAttributes, node *parser.AstNode
 	case parser.AstText:
 	// ignore
 	default:
-		return nil, fmt.Errorf("unexpected node seen: %s", node.Type)
+		return nil, errors.Errorf("unexpected node seen: %s", node.Type)
 	}
 
 	return pkgs, nil

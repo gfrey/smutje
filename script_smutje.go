@@ -46,7 +46,7 @@ func (s *smutjeScript) initCommands(attrs smAttributes) error {
 
 	args := strings.Fields(raw)
 	if len(args) == 0 {
-		return fmt.Errorf("empty command received")
+		return errors.Errorf("empty command received")
 	}
 	switch strings.ToLower(args[0]) {
 	case ":write_file":
@@ -56,7 +56,7 @@ func (s *smutjeScript) initCommands(attrs smAttributes) error {
 	case ":jenkins_artifact":
 		s.Command, err = newJenkinsArtifactCmd(args[1:])
 	default:
-		return fmt.Errorf("command %s unknown", args[0])
+		return errors.Errorf("command %s unknown", args[0])
 	}
 	return err
 }
@@ -75,7 +75,7 @@ type execJenkinsArtifactCmd struct {
 
 func newJenkinsArtifactCmd(args []string) (*execJenkinsArtifactCmd, error) {
 	if len(args) < 4 || len(args) > 6 {
-		return nil, fmt.Errorf(`syntax error: jenkins artifact usage ":jenkins_artifact <host> <job> <artifact> <target> [<user> <umask>]?"`)
+		return nil, errors.Errorf(`syntax error: jenkins artifact usage ":jenkins_artifact <host> <job> <artifact> <target> [<user> <umask>]?"`)
 	}
 
 	cmd := new(execJenkinsArtifactCmd)
@@ -160,7 +160,7 @@ type execWriteFileCmd struct {
 
 func newExecWriteFileCmd(path string, args []string) (*execWriteFileCmd, error) {
 	if len(args) < 2 || len(args) == 3 || len(args) > 4 {
-		return nil, fmt.Errorf(`syntax error: write file/template usage ":write_file <source> <target> [<user> <umask>]?"`)
+		return nil, errors.Errorf(`syntax error: write file/template usage ":write_file <source> <target> [<user> <umask>]?"`)
 	}
 
 	filename := args[0]
@@ -239,7 +239,7 @@ func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) erro
 
 	stdin, err := sess.StdinPipe()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to receive stdin pipe")
 	}
 
 	l.Printf("writing file %q", a.Target)
@@ -255,7 +255,7 @@ func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) erro
 	}
 
 	if _, err := io.Copy(stdin, r); err != nil {
-		return err
+		return errors.Wrap(err, "failed to send script to target")
 	}
 	stdin.Close()
 

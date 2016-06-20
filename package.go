@@ -12,6 +12,7 @@ import (
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
 	"github.com/gfrey/smutje/parser"
+	"github.com/pkg/errors"
 )
 
 type smPackage struct {
@@ -185,7 +186,7 @@ func (pkg *smPackage) writeTargetState(client connection.Client) error {
 
 	stdin, err := sess.StdinPipe()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to receive stdin pipe")
 	}
 
 	tstamp := time.Now().UTC().Format("20060102T150405")
@@ -196,7 +197,7 @@ func (pkg *smPackage) writeTargetState(client connection.Client) error {
 	}
 
 	if _, err := io.WriteString(stdin, strings.Join(pkg.state, "\n")+"\n"); err != nil {
-		return err
+		return errors.Wrap(err, "failed to send script to target")
 	}
 	stdin.Close()
 	return sess.Wait()

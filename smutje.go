@@ -1,11 +1,11 @@
 package smutje
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/gfrey/smutje/logger"
 	"github.com/gfrey/smutje/parser"
+	"github.com/pkg/errors"
 )
 
 func ReadFile(filename string) (*smResource, error) {
@@ -22,9 +22,9 @@ func convertToTarget(path string, astN *parser.AstNode) (*smResource, error) {
 	case parser.AstResource:
 		return newResource(path, astN)
 	case parser.AstTemplate:
-		return nil, fmt.Errorf("can't handle templates directly, use the include mechanism!")
+		return nil, errors.Errorf("can't handle templates directly, use the include mechanism!")
 	default:
-		return nil, fmt.Errorf("unexpected node seen: %s", astN.Type)
+		return nil, errors.Errorf("unexpected node seen: %s", astN.Type)
 	}
 }
 

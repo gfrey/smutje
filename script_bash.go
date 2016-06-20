@@ -7,6 +7,7 @@ import (
 
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
+	"github.com/pkg/errors"
 )
 
 type bashScript struct {
@@ -38,7 +39,7 @@ func (s *bashScript) Exec(l logger.Logger, client connection.Client) error {
 
 	stdin, err := sess.StdinPipe()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to receive stdin pipe")
 	}
 	defer stdin.Close()
 
@@ -50,9 +51,9 @@ func (s *bashScript) Exec(l logger.Logger, client connection.Client) error {
 
 	switch n, err := io.WriteString(stdin, s.Script); {
 	case err != nil:
-		return err
+		return errors.Wrap(err, "failed to send script to target")
 	case n != len(s.Script):
-		return fmt.Errorf("expected to send %d bytes, sent %d", len(s.Script), n)
+		return errors.Errorf("expected to send %d bytes, sent %d", len(s.Script), n)
 	default:
 		stdin.Close()
 		return sess.Wait()

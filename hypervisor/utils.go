@@ -1,10 +1,6 @@
 package hypervisor
 
-import (
-	"fmt"
-
-	"github.com/gfrey/smutje/connection"
-)
+import "github.com/gfrey/smutje/connection"
 
 func runCommand(client connection.Client, cmd string) error {
 	sess, err := client.NewSession()
@@ -14,7 +10,7 @@ func runCommand(client connection.Client, cmd string) error {
 	defer sess.Close()
 
 	if err := sess.Start(cmd); err != nil {
-		return fmt.Errorf("command failed: %s", cmd)
+		return err
 	}
 	return sess.Wait()
 }

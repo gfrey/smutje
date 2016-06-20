@@ -1,6 +1,9 @@
 package connection
 
-import "golang.org/x/crypto/ssh"
+import (
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
+)
 
 type sshSession struct {
 	*ssh.Session
@@ -11,12 +14,12 @@ func (s *sshSession) Run(cmd string) error {
 	if s.withSudo {
 		cmd = "sudo " + cmd
 	}
-	return s.Session.Run(cmd)
+	return errors.Wrap(s.Session.Run(cmd), "failed to run command")
 }
 
 func (s *sshSession) Start(cmd string) error {
 	if s.withSudo {
 		cmd = "sudo " + cmd
 	}
-	return s.Session.Start(cmd)
+	return errors.Wrap(s.Session.Start(cmd), "failed to start command")
 }

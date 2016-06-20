@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gfrey/smutje/logger"
+	"github.com/pkg/errors"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -42,7 +43,7 @@ func NewSSHClient(addr, user string) (Client, error) {
 	var err error
 	addr = fmt.Sprintf("%s:%d", sc.addr, 22)
 	sc.client, err = ssh.Dial("tcp", addr, sc.config)
-	return sc, err
+	return sc, errors.Wrap(err, "failed to connect to SSH host")
 }
 
 func (sc *sshClient) Name() string {
@@ -52,7 +53,7 @@ func (sc *sshClient) Name() string {
 func (sc *sshClient) NewSession() (Session, error) {
 	s, err := sc.client.NewSession()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create new SSH session")
 	}
 
 	return &sshSession{Session: s, withSudo: sc.config.User != "root"}, nil
@@ -90,5 +91,5 @@ func (sc *sshClient) askForPassword() (string, error) {
 	fmt.Printf("Password for %s@%s: ", sc.config.User, sc.addr)
 	buf, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Printf("\n")
-	return string(buf), err
+	return string(buf), errors.Wrap(err, "failed to read password")
 }

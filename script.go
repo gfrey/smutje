@@ -1,11 +1,10 @@
 package smutje
 
 import (
-	"fmt"
-
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
 	"github.com/gfrey/smutje/parser"
+	"github.com/pkg/errors"
 )
 
 type smScript interface {
@@ -16,7 +15,7 @@ type smScript interface {
 
 func newScript(path string, n *parser.AstNode) (smScript, error) {
 	if n.Type != parser.AstScript {
-		return nil, fmt.Errorf("expected script node, got %s", n.Type)
+		return nil, errors.Errorf("expected script node, got %s", n.Type)
 	}
 
 	switch s := n.Value.(type) {
@@ -25,6 +24,6 @@ func newScript(path string, n *parser.AstNode) (smScript, error) {
 	case *parser.BashScript:
 		return &bashScript{ID: n.ID, Script: s.Script}, nil
 	default:
-		return nil, fmt.Errorf("expected a string value, got %T", n.Value)
+		return nil, errors.Errorf("expected a string value, got %T", n.Value)
 	}
 }

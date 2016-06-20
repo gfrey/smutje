@@ -1,7 +1,6 @@
 package smutje
 
 import (
-	"fmt"
 	"testing"
 
 	"io"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
+	"github.com/pkg/errors"
 )
 
 func TestProvision(t *testing.T) {
@@ -143,7 +143,7 @@ func (ts *testSession) Start(cmd string) error {
 
 func (ts *testSession) Wait() error {
 	if ts.fail {
-		return fmt.Errorf("asked to fail")
+		return errors.Errorf("asked to fail")
 	}
 	return nil
 }

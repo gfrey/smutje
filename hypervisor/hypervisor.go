@@ -1,10 +1,9 @@
 package hypervisor
 
 import (
-	"fmt"
-
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
+	"github.com/pkg/errors"
 )
 
 type Client interface {
@@ -19,6 +18,6 @@ func New(typ, address, username string) (Client, error) {
 		return NewSmartOSHypervisor(address, username)
 
 	default:
-		return nil, fmt.Errorf("hypervisor %q not supported", typ)
+		return nil, errors.Errorf("hypervisor %q not supported", typ)
 	}
 }
