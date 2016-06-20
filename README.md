@@ -3,7 +3,7 @@
 NOTE: This is work in progress! It's neither clean nor fully working.
 
 A simple provisioning tool. Using bash scripts and a simple caching layer to
-only execute what was not yet executed.
+only execute what was not yet executed or has changed.
 
 The idea is to use a markdown dialect to describe the entity to provision. This
 way documentation and code are one and (hopefully) easy to read. It's assumed
@@ -64,13 +64,13 @@ In the context of smutje the following terms are important:
   specific hypervisor. This of course isn't required for hosts. The
   specification of what and how to provision the resource is done using
   packages.
-* **script**: This is something executed during provisioning of a resource. It
-  can either be some bash script, or some smutje specific commands (like
-  writing a file on the target).
 * **package**: Each package is an ordered list of scripts, i.e. it is an
   intermediate abstraction layer. Each package has its own caching. If a script
   changed, all the following scripts in this package will be executed again,
   but following packages are not effected.
+* **script**: This is something executed during provisioning of a resource. It
+  can either be some bash script, or some smutje specific commands (like
+  writing a file on the target).
 * **template**: A template is larger abstraction. It is a set of packages that
   can be used to reuse a set of packages for different resources.
 * **attributes**: Attributes are used to configure values that are reused often
@@ -94,6 +94,10 @@ following examples:
 	## Package: Network Configuration [net_cfg]
 	## Include: ./service.smd [service]
 
+The identifier is used in logging and the combination of the respective
+identifiers is used as key to the caching layer, i.e. changing an entities
+identifier will break caching for all packages below this entity.
+
 
 ### Quotes
 
@@ -116,6 +120,9 @@ whitespace is possible in following lines and is added to the script.
 
 Lines where the first character is a colon are considered smutje scripts,
 otherwise it is bash script. Both can't be mixed in one script!
+
+Each block is a line in the caching layer, i.e. the blocks are atomic regarding
+the caching.
 
 
 ## Packages And Scripts
@@ -174,6 +181,9 @@ This is why there are some special commands available:
 * `write_template`: Uses the `write_file` logic but will send the file's
   content through the template engine first, i.e. you can again use the dish's
   attributes in the content.
+* `jenkins_artifact`: Given the information for a jenkins host and job it will
+  download the artifact if it changed since the last run using the artifacts
+  fingerprint.
 
 The command line itself is rendered with the template engine, i.e. again the
 attributes can be used.
