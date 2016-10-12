@@ -20,11 +20,12 @@ type smartOS struct {
 	client connection.Client
 }
 
-func NewSmartOSHypervisor(addr, user string) (Client, error) {
+func NewSmartOSHypervisor(addr string) (Client, error) {
 	var err error
 	hp := new(smartOS)
-	hp.addr, hp.user = addr, user
-	hp.client, err = connection.NewSSHClient(addr, user)
+	hp.addr = addr
+	hp.user = "root"
+	hp.client, err = connection.NewSSHClient(hp.addr, hp.user)
 	return hp, err
 }
 
@@ -68,7 +69,12 @@ func (hp *smartOS) UUID(alias string) (string, error) {
 			return fields[0], nil
 		}
 	}
-	return "", sc.Err()
+
+	if err := sc.Err(); err != nil {
+		return "", errors.Wrap(err, "failed to scan output")
+	}
+
+	return "", nil
 }
 
 func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {

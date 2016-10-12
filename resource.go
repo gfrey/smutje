@@ -118,9 +118,6 @@ func (res *smResource) initializeClient() (err error) {
 	switch _, ok = res.Attributes["Hypervisor"]; {
 	case ok:
 		res.isVirtual = true
-		if res.address, ok = res.Attributes["Host"]; !ok {
-			return errors.Errorf("Virtual resource host attribute (%q) not specified", "Host")
-		}
 	case res.Blueprint != "":
 		return errors.Errorf("hypervisor attribute required for blueprint to be supported!")
 	default:
@@ -134,10 +131,9 @@ func (res *smResource) initializeClient() (err error) {
 				}
 			}
 		}
-	}
-
-	if res.address == "" {
-		return fmt.Errorf("Host address attribute not specified!")
+		if res.address == "" {
+			return fmt.Errorf("Host address attribute not specified!")
+		}
 	}
 
 	res.username, ok = res.Attributes["Username"]
@@ -147,7 +143,7 @@ func (res *smResource) initializeClient() (err error) {
 
 	switch {
 	case res.isVirtual:
-		res.hypervisor, err = hypervisor.New(res.Attributes["Hypervisor"], res.Attributes["Host"], res.username)
+		res.hypervisor, err = hypervisor.New(res.Attributes)
 		if err != nil {
 			return err
 		}
