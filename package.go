@@ -61,7 +61,7 @@ func newPackage(parentID, path string, attrs smAttributes, n *parser.AstNode) (*
 		case parser.AstText:
 		// ignore
 		default:
-			return nil, fmt.Errorf("unexpected node found: %s", n.Type)
+			return nil, errors.Errorf("unexpected node found: %s", n.Type)
 		}
 	}
 
@@ -72,7 +72,7 @@ func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err
 	if client != nil { // If a virtual resource doesn't exist yet, the client is nil!
 		pkg.state, err = pkg.readPackageState(client)
 		if err != nil {
-			return fmt.Errorf("failed to read target state: %s", err)
+			return errors.Errorf("failed to read target state: %s", err)
 		}
 	}
 
@@ -154,7 +154,7 @@ func (pkg *smPackage) readPackageState(client connection.Client) ([]string, erro
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, stdout); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to copy output of command")
 	}
 
 	if err := sess.Wait(); err != nil {
@@ -171,10 +171,10 @@ func (pkg *smPackage) readPackageState(client connection.Client) ([]string, erro
 		case '-':
 			//ignore
 		default:
-			return nil, fmt.Errorf("invalid token read: %s", l)
+			return nil, errors.Errorf("invalid token read: %s", l)
 		}
 	}
-	return state, sc.Err()
+	return state, errors.Wrap(sc.Err(), "failed to scan output")
 }
 
 func (pkg *smPackage) writeTargetState(client connection.Client) error {
