@@ -243,3 +243,9 @@ There are two binaries included in smutje:
 
 
 
+## Requirements
+
+If `sudo` is required (aka instance is connected to using a non root user) then
+the asking for password should be disabled:
+
+    echo "<username> ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-nopassword
