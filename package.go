@@ -161,7 +161,7 @@ func (pkg *smPackage) readPackageState(client connection.Client) ([]string, erro
 	}
 
 	fname := fmt.Sprintf("/var/lib/smutje/%s.log", pkg.ID)
-	cmd := fmt.Sprintf(`bash -c "if [[ -f %[1]q ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi"`, fname)
+	cmd := fmt.Sprintf(`/usr/bin/env bash -c "if [[ -f '%[1]s' ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi"`, fname)
 	if err := sess.Start(cmd); err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func (pkg *smPackage) writeTargetState(client connection.Client) error {
 
 	tstamp := time.Now().UTC().Format("20060102T150405")
 	filename := fmt.Sprintf("/var/lib/smutje/%s.%s.log", pkg.ID, tstamp)
-	cmd := fmt.Sprintf(`bash -c "cat - > %[1]s && ln -sf %[1]s /var/lib/smutje/%[2]s.log"`, filename, pkg.ID)
+	cmd := fmt.Sprintf(`/usr/bin/env bash -c "rm -Rf /tmp/smutje/*; cat - > %[1]s && ln -sf %[1]s /var/lib/smutje/%[2]s.log"`, filename, pkg.ID)
 	if err := sess.Start(cmd); err != nil {
 		return err
 	}

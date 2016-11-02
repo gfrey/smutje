@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-const hA = "4a24a6308d8d208844077a8cf89982f3"
-const hB = "2f06ae88c46786997b889c10d9f18695"
-const hC = "6c3e28ab2914f4bcff2453ca6162f2af"
+const hA = "dc9ca0192ddf659c2a4ee8da844a3a3a"
+const hB = "4d3a06c079be269b23716dfa7b9e7cfb"
+const hC = "0adfc50e475d4271e1c98913e779a720"
 
 const hAE, hAC, hAF = "+"+hA, "."+hA, "-"+hA
 const hBE, hBC, hBF = "+"+hB, "."+hB, "-"+hB

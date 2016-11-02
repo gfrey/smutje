@@ -48,7 +48,7 @@ func (s *bashScript) Exec(l logger.Logger, client connection.Client) error {
 	defer stdin.Close()
 
 	fname := fmt.Sprintf("/var/lib/smutje/%s.sh", s.hash)
-	cmd := fmt.Sprintf(`bash -c "cat - > %[1]s && bash -l %[1]s"`, fname)
+	cmd := fmt.Sprintf(`/usr/bin/env bash -c "cat - > %[1]s && bash -l %[1]s"`, fname)
 	if err := sess.Start(cmd); err != nil {
 		return err
 	}

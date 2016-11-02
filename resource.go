@@ -99,7 +99,7 @@ func (res *smResource) Generate(l logger.Logger) (err error) {
 	}
 	defer sess.Close()
 
-	return sess.Run("mkdir -p /var/lib/smutje")
+	return sess.Run(`/usr/bin/env bash -c "mkdir -p /tmp/smutje && mkdir -p /var/lib/smutje"`)
 }
 
 func (res *smResource) Provision(l logger.Logger) (err error) {

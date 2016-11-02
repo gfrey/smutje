@@ -267,7 +267,7 @@ func (a *execJenkinsArtifactCmd) Exec(l logger.Logger, client connection.Client)
 		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
 	}
 
-	cmd := fmt.Sprintf(`bash -c "{ dir=$(dirname %[1]s); test -d \${dir} || mkdir -p \${dir}; } && curl -sSL %[2]s -o %[1]s`+setFilePerms+`"`, a.Target, a.url)
+	cmd := fmt.Sprintf(`/usr/bin/env bash -c "{ dir=$(dirname %[1]s); test -d \${dir} || mkdir -p \${dir}; } && curl -sSL %[2]s -o %[1]s`+setFilePerms+`"`, a.Target, a.url)
 	if err := sess.Start(cmd); err != nil {
 		return err
 	}
@@ -383,7 +383,7 @@ func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) erro
 		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
 	}
 
-	cmd := fmt.Sprintf(`bash -c "{ dir=$(dirname %[1]s); test -d \${dir} || mkdir -p \${dir}; } && cat - > %[1]s`+setFilePerms+`"`, a.Target)
+	cmd := fmt.Sprintf(`/usr/bin/env bash -c "{ dir=$(dirname %[1]s); test -d \${dir} || mkdir -p \${dir}; } && cat - > %[1]s`+setFilePerms+`"`, a.Target)
 	if err := sess.Start(cmd); err != nil {
 		return err
 	}
