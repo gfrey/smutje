@@ -72,7 +72,7 @@ func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err
 	if client != nil { // If a virtual resource doesn't exist yet, the client is nil!
 		pkg.state, err = pkg.readPackageState(client)
 		if err != nil {
-			return errors.Errorf("failed to read target state: %s", err)
+			return err
 		}
 	}
 
