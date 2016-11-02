@@ -13,21 +13,21 @@ import (
 )
 
 type smResource struct {
-	ID        string
-	Name      string
-	Blueprint string
+	ID         string
+	Name       string
+	Blueprint  string
 
-	Attributes smAttributes
+	Attributes Attributes
 	Packages   []*smPackage
 
 	client     connection.Client
 	hypervisor hypervisor.Client
 	uuid       string
 
-	address  string
-	username string
+	address    string
+	username   string
 
-	isVirtual bool
+	isVirtual  bool
 }
 
 func newResource(path string, n *parser.AstNode) (*smResource, error) {
@@ -35,7 +35,7 @@ func newResource(path string, n *parser.AstNode) (*smResource, error) {
 	res.ID = n.ID
 	res.Name = n.Name
 
-	res.Attributes = smAttributes{}
+	res.Attributes = Attributes{}
 	res.Attributes["Hostname"] = n.ID
 
 	for _, child := range n.Children {
@@ -159,7 +159,7 @@ func (res *smResource) initializeClient() (err error) {
 	}
 }
 
-func handleChild(parentID, path string, attrs smAttributes, node *parser.AstNode) ([]*smPackage, error) {
+func handleChild(parentID, path string, attrs Attributes, node *parser.AstNode) ([]*smPackage, error) {
 	pkgs := []*smPackage{}
 	switch node.Type {
 	case parser.AstAttributes:

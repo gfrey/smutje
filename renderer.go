@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func renderString(context, input string, attrs smAttributes) (string, error) {
+func renderString(context, input string, attrs Attributes) (string, error) {
 	tmpl, err := template.New(context).Parse(input)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to parse template")
@@ -20,7 +20,7 @@ func renderString(context, input string, attrs smAttributes) (string, error) {
 	return buf.String(), errors.Wrap(err, "failed to render template")
 }
 
-func renderFile(filename string, attrs smAttributes) (io.ReadCloser, error) {
+func renderFile(filename string, attrs Attributes) (io.ReadCloser, error) {
 	tpl, err := template.ParseFiles(filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse template")

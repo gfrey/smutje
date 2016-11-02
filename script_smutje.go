@@ -28,7 +28,7 @@ func (s *smutjeScript) Hash() string {
 	return s.Command.Hash()
 }
 
-func (s *smutjeScript) Prepare(attrs smAttributes, prevHash string) (string, error) {
+func (s *smutjeScript) Prepare(attrs Attributes, prevHash string) (string, error) {
 	if err := s.initCommands(attrs); err != nil {
 		return "", err
 	}
@@ -44,7 +44,7 @@ func (s *smutjeScript) MustExecute() bool {
 	return s.Command.MustExecute()
 }
 
-func (s *smutjeScript) initCommands(attrs smAttributes) error {
+func (s *smutjeScript) initCommands(attrs Attributes) error {
 	raw, err := renderString(s.ID, s.rawCommand, attrs)
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (a *execInjectPasswordsCmd) Hash() string {
 	return a.hash
 }
 
-func (a *execInjectPasswordsCmd) Prepare(attrs smAttributes, prevHash string) (string, error) {
+func (a *execInjectPasswordsCmd) Prepare(attrs Attributes, prevHash string) (string, error) {
 	hash := md5.New()
 	if _, err := hash.Write([]byte(prevHash)); err != nil {
 		return "", errors.Wrap(err, "failed to write hash")
@@ -225,7 +225,7 @@ func (a *execJenkinsArtifactCmd) Hash() string {
 	return a.hash
 }
 
-func (a *execJenkinsArtifactCmd) Prepare(attrs smAttributes, prevHash string) (string, error) {
+func (a *execJenkinsArtifactCmd) Prepare(attrs Attributes, prevHash string) (string, error) {
 	a.url = fmt.Sprintf("http://%s/job/%s/lastSuccessfulBuild/artifact/%s", a.Host, a.Job, a.Artifact)
 	resp, err := http.Get(a.url + "/*fingerprint*/")
 	if err != nil {
@@ -287,9 +287,9 @@ type execWriteFileCmd struct {
 
 	Render bool
 
-	attrs smAttributes
-	hash  string
-	size  int64
+	attrs  Attributes
+	hash   string
+	size   int64
 }
 
 func newExecWriteFileCmd(path string, args []string) (*execWriteFileCmd, error) {
@@ -329,7 +329,7 @@ func (a *execWriteFileCmd) Hash() string {
 	return a.hash
 }
 
-func (a *execWriteFileCmd) Prepare(attrs smAttributes, prevHash string) (string, error) {
+func (a *execWriteFileCmd) Prepare(attrs Attributes, prevHash string) (string, error) {
 	a.attrs = attrs
 	r, err := a.read()
 	if err != nil {

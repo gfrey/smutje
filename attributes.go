@@ -5,14 +5,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-type smAttributes map[string]string
+type Attributes map[string]string
 
-func newAttributes(n *parser.AstNode) (smAttributes, error) {
+func newAttributes(n *parser.AstNode) (Attributes, error) {
 	if n.Type != parser.AstAttributes {
 		return nil, errors.Errorf("expected attributes node, got %s", n.Type)
 	}
 
-	attrs := smAttributes{}
+	attrs := Attributes{}
 
 	if raw, ok := n.Value.([]*parser.Attribute); !ok {
 		return nil, errors.Errorf("expected attributes on node, got %T", n.Value)
@@ -25,23 +25,23 @@ func newAttributes(n *parser.AstNode) (smAttributes, error) {
 	return attrs, nil
 }
 
-func (a smAttributes) Copy() smAttributes {
-	c := smAttributes{}
+func (a Attributes) Copy() Attributes {
+	c := Attributes{}
 	for k, v := range a {
 		c[k] = v
 	}
 	return c
 }
 
-func (a smAttributes) Merge(b smAttributes) (smAttributes, error) {
-	c := smAttributes{}
+func (a Attributes) Merge(b Attributes) (Attributes, error) {
+	c := Attributes{}
 	for k, v := range a {
 		c[k] = v
 	}
 	return c, c.MergeInplace(b)
 }
 
-func (a smAttributes) MergeInplace(b smAttributes) error {
+func (a Attributes) MergeInplace(b Attributes) error {
 	var err error
 	for k, v := range b {
 		if _, found := a[k]; found {

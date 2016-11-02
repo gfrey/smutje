@@ -16,17 +16,17 @@ import (
 )
 
 type smPackage struct {
-	Name string
-	ID   string
+	Name       string
+	ID         string
 
-	Attributes smAttributes
+	Attributes Attributes
 	Scripts    []smScript
 
-	state   []string
-	isDirty bool
+	state      []string
+	isDirty    bool
 }
 
-func newPackage(parentID, path string, attrs smAttributes, n *parser.AstNode) (*smPackage, error) {
+func newPackage(parentID, path string, attrs Attributes, n *parser.AstNode) (*smPackage, error) {
 	if n.Type != parser.AstPackage {
 		return nil, fmt.Errorf("expected package node, got %s", n.Type)
 	}
@@ -68,7 +68,7 @@ func newPackage(parentID, path string, attrs smAttributes, n *parser.AstNode) (*
 	return pkg, nil
 }
 
-func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err error) {
+func (pkg *smPackage) Prepare(client connection.Client, attrs Attributes) (err error) {
 	if client != nil { // If a virtual resource doesn't exist yet, the client is nil!
 		pkg.state, err = pkg.readPackageState(client)
 		if err != nil {

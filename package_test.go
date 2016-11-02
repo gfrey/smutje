@@ -69,7 +69,7 @@ func TestProvision(t *testing.T) {
 			&bashScript{Script: "echo bar"},
 		}
 
-		if err := pkg.Prepare(client, smAttributes{}); err != nil {
+		if err := pkg.Prepare(client, Attributes{}); err != nil {
 			t.Fatalf("didn't expect an error, got: %s", err)
 		}
 

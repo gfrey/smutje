@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func newInclude(parentID, path string, attrs smAttributes, n *parser.AstNode) ([]*smPackage, error) {
+func newInclude(parentID, path string, attrs Attributes, n *parser.AstNode) ([]*smPackage, error) {
 	if n.Type != parser.AstInclude {
 		return nil, errors.Errorf("expected include node, got %s", n.Type)
 	}
@@ -48,7 +48,7 @@ func newInclude(parentID, path string, attrs smAttributes, n *parser.AstNode) ([
 	return parseTemplate(filename, nodeID, incAttrs)
 }
 
-func parseTemplate(filename, parentID string, attrs smAttributes) ([]*smPackage, error) {
+func parseTemplate(filename, parentID string, attrs Attributes) ([]*smPackage, error) {
 	n, err := parser.Parse(filename)
 	if err != nil {
 		return nil, err

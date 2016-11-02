@@ -8,7 +8,7 @@ import (
 )
 
 type smScript interface {
-	Prepare(attrs smAttributes, prevHash string) (string, error)
+	Prepare(attrs Attributes, prevHash string) (string, error)
 	Exec(l logger.Logger, client connection.Client) error
 	Hash() string
 	MustExecute() bool
