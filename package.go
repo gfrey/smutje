@@ -77,11 +77,11 @@ func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err
 	}
 
 	hash := ""
+	sattrs, err := attrs.Merge(pkg.Attributes)
+	if err != nil {
+		return err
+	}
 	for i, s := range pkg.Scripts {
-		sattrs, err := attrs.Merge(pkg.Attributes)
-		if err != nil {
-			return err
-		}
 		hash, err = s.Prepare(sattrs, hash)
 		if err != nil {
 			return err
