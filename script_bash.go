@@ -16,6 +16,10 @@ type bashScript struct {
 	hash   string
 }
 
+func (bashScript) MustExecute() bool {
+	return false
+}
+
 func (s *bashScript) Hash() string {
 	return s.hash
 }

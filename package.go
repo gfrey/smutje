@@ -94,35 +94,49 @@ func (pkg *smPackage) Prepare(client connection.Client, attrs smAttributes) (err
 	return nil
 }
 
+func (pkg *smPackage) firstToExec() int {
+	firstToExec := -1
+	for i, s := range pkg.Scripts {
+		if firstToExec == -1 && s.MustExecute() {
+			firstToExec = i
+		}
+
+		hash := s.Hash()
+		if !(i < len(pkg.state) && pkg.state[i][1:] == hash) {
+			if firstToExec == -1 {
+				firstToExec = i
+			}
+			return firstToExec
+		}
+	}
+	return -1 // all hashes valid, so nothing to do
+}
+
 func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) (err error) {
 	l = l.Tag(pkg.ID)
 
-	oldState := pkg.state
-	pkg.state = make([]string, len(pkg.Scripts))
-
-	allCached := true
+	firstToExec := pkg.firstToExec()
+	if firstToExec == -1 {
+		l.Printf("all steps cached")
+		return
+	}
 
 	defer func() {
-		if allCached {
-			return
-		}
-
 		e := pkg.writeTargetState(client)
 		if err == nil {
 			err = e
 		}
 	}()
 
+	pkg.state = make([]string, len(pkg.Scripts))
 	for i, s := range pkg.Scripts {
 		hash := s.Hash()
-
-		if allCached && i < len(oldState) && oldState[i][1:] == hash {
+		if i < firstToExec {
 			l.Printf("step %d cached", i)
 			pkg.state[i] = "." + hash
 			continue
 		}
 
-		allCached = false
 		if err = s.Exec(l, client); err != nil {
 			l.Printf("failed in %s", hash)
 			pkg.state[i] = "-" + hash

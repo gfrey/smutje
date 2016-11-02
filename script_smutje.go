@@ -38,6 +38,10 @@ func (s *smutjeScript) Exec(l logger.Logger, client connection.Client) error {
 	return s.Command.Exec(l, client)
 }
 
+func (s *smutjeScript) MustExecute() bool {
+	return s.Command.MustExecute()
+}
+
 func (s *smutjeScript) initCommands(attrs smAttributes) error {
 	raw, err := renderString(s.ID, s.rawCommand, attrs)
 	if err != nil {
@@ -143,6 +147,10 @@ func (a *execJenkinsArtifactCmd) Exec(l logger.Logger, client connection.Client)
 	}
 
 	return sess.Wait()
+}
+
+func (*execJenkinsArtifactCmd) MustExecute() bool {
+	return false
 }
 
 type execWriteFileCmd struct {
@@ -263,4 +271,8 @@ func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) erro
 	// TODO use compression on the wire
 
 	return sess.Wait()
+}
+
+func (*execWriteFileCmd) MustExecute() bool {
+	return false
 }
