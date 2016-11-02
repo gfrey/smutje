@@ -143,6 +143,7 @@ func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) (err 
 			pkg.state = pkg.state[:i+1]
 			return err
 		}
+		l.Printf("executed %s", hash)
 		pkg.state[i] = "+" + hash
 	}
 	return nil

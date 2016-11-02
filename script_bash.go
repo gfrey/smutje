@@ -8,6 +8,7 @@ import (
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type bashScript struct {
@@ -40,6 +41,8 @@ func (s *bashScript) Exec(l logger.Logger, client connection.Client) error {
 		return err
 	}
 	defer sess.Close()
+
+	l.Printf("%s", strings.TrimSpace(s.Script[7:]))
 
 	stdin, err := sess.StdinPipe()
 	if err != nil {
