@@ -10,27 +10,20 @@ import (
 	"github.com/gfrey/smutje/connection"
 	"github.com/gfrey/smutje/logger"
 	"github.com/pkg/errors"
+	"strings"
 )
 
+const hA = "4a24a6308d8d208844077a8cf89982f3"
+const hB = "2f06ae88c46786997b889c10d9f18695"
+const hC = "6c3e28ab2914f4bcff2453ca6162f2af"
+
+const hAE, hAC, hAF = "+"+hA, "."+hA, "-"+hA
+const hBE, hBC, hBF = "+"+hB, "."+hB, "-"+hB
+const hCE, hCC, hCF = "+"+hC, "."+hC, "-"+hC
+
+
 func TestProvision(t *testing.T) {
-	pkg := new(smPackage)
-	pkg.Scripts = append(pkg.Scripts, &bashScript{Script: "echo foo"})
-	pkg.Scripts = append(pkg.Scripts, &smutjeScript{rawCommand: ":write_file testdata/a b"})
-	pkg.Scripts = append(pkg.Scripts, &bashScript{Script: "echo bar"})
-
 	l := logger.NewDiscard()
-
-	if err := pkg.Prepare(nil, smAttributes{}); err != nil {
-		t.Fatalf("didn't expect an error, got: %s", err)
-	}
-
-	hA := "4a24a6308d8d208844077a8cf89982f3"
-	hB := "2f06ae88c46786997b889c10d9f18695"
-	hC := "6c3e28ab2914f4bcff2453ca6162f2af"
-
-	hAE, hAC, hAF := "+"+hA, "."+hA, "-"+hA
-	hBE, hBC, hBF := "+"+hB, "."+hB, "-"+hB
-	hCE, hCC, hCF := "+"+hC, "."+hC, "-"+hC
 
 	tt := []struct {
 		curState []string
@@ -39,7 +32,12 @@ func TestProvision(t *testing.T) {
 	}{
 		{nil, -1, []string{hAE, hBE, hCE}},
 		{[]string{hAE}, -1, []string{hAC, hBE, hCE}},
+		{[]string{hAF}, -1, []string{hAE, hBE, hCE}},
 		{[]string{hAE, hBE}, -1, []string{hAC, hBC, hCE}},
+		{[]string{hAE, hBF}, -1, []string{hAC, hBE, hCE}},
+		{[]string{hAE, hBE, hCE}, -1, []string{hAE, hBE, hCE}},
+		{[]string{hAE, hBE, hCF}, -1, []string{hAC, hBC, hCE}},
+
 		{[]string{hAC, hBC, hCC}, -1, []string{hAC, hBC, hCC}},
 
 		{nil, 0, []string{hAF}},
@@ -49,13 +47,35 @@ func TestProvision(t *testing.T) {
 		{[]string{"+a", "+b", "+c"}, 0, []string{hAF}},
 		{[]string{"+a", "+b", "+c"}, 1, []string{hAE, hBF}},
 		{[]string{"+a", "+b", "+c"}, 2, []string{hAE, hBE, hCF}},
+
+		// consider that cached elements won't result in execution (that is why the fail idx doesn't change
+		{[]string{hAE, "+b", "+c"}, 0, []string{hAC, hBF}},
+		{[]string{hAC, hBE,  "+c"}, 0, []string{hAC, hBC, hCF}},
 	}
 
 	for i, tti := range tt {
 		client := new(testClient)
-		client.failIdx = tti.failIdx
+		client.failIdx = -1
+		if tti.curState != nil {
+			client.expCommand = "cat /var/lib/smutje/foobar.log"
+			client.cmdOutput = strings.Join(tti.curState, "\n")
+		}
 
-		pkg.state = tti.curState
+		pkg := new(smPackage)
+		pkg.ID = "foobar"
+		pkg.Scripts = []smScript{
+			&bashScript{Script: "echo foo"},
+			&smutjeScript{rawCommand: ":write_file testdata/a b"},
+			&bashScript{Script: "echo bar"},
+		}
+
+		if err := pkg.Prepare(client, smAttributes{}); err != nil {
+			t.Fatalf("didn't expect an error, got: %s", err)
+		}
+
+		client.curIdx = 0
+		client.failIdx = tti.failIdx
+		client.expCommand = ""
 
 		err := pkg.Provision(l, client)
 		if tti.failIdx == -1 && err != nil {
@@ -82,8 +102,11 @@ func TestProvision(t *testing.T) {
 }
 
 type testClient struct {
-	failIdx int
-	curIdx  int
+	failIdx    int
+	curIdx     int
+
+	expCommand string
+	cmdOutput  string
 }
 
 func (tc *testClient) Name() string {
@@ -96,6 +119,8 @@ func (tc *testClient) NewSession() (connection.Session, error) {
 		s.fail = true
 	}
 	tc.curIdx++
+	s.cmdOutput = tc.cmdOutput
+	s.expCommand = tc.expCommand
 	return s, nil
 }
 
@@ -108,11 +133,14 @@ func (tc *testClient) Close() error {
 }
 
 type testSession struct {
-	Stdin  *bytes.Buffer
-	Stdout *bytes.Buffer
-	Stderr *bytes.Buffer
+	Stdin      *bytes.Buffer
+	Stdout     *bytes.Buffer
+	Stderr     *bytes.Buffer
 
-	fail bool
+	fail       bool
+
+	expCommand string
+	cmdOutput  string
 }
 
 func (ts *testSession) Close() error {
@@ -138,6 +166,13 @@ func (ts *testSession) Run(cmd string) error {
 }
 
 func (ts *testSession) Start(cmd string) error {
+	if ts.expCommand != "" {
+		if strings.Contains(cmd, ts.expCommand) {
+			ts.Stdout.WriteString(ts.cmdOutput)
+		} else {
+			return errors.Errorf("expected %q to contain %q, it didn't", cmd, ts.expCommand)
+		}
+	}
 	return nil
 }
 
