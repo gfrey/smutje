@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type smResource struct {
+type Resource struct {
 	ID         string
 	Name       string
 	Blueprint  string
@@ -30,8 +30,8 @@ type smResource struct {
 	isVirtual  bool
 }
 
-func newResource(path string, n *parser.AstNode) (*smResource, error) {
-	res := new(smResource)
+func NewResource(path string, n *parser.AstNode) (*Resource, error) {
+	res := new(Resource)
 	res.ID = n.ID
 	res.Name = n.Name
 
@@ -58,7 +58,7 @@ func newResource(path string, n *parser.AstNode) (*smResource, error) {
 	return res, nil
 }
 
-func (res *smResource) Prepare(l logger.Logger) error {
+func (res *Resource) Prepare(l logger.Logger) error {
 	l = l.Tag(res.ID)
 
 	if err := res.initializeClient(); err != nil {
@@ -73,7 +73,7 @@ func (res *smResource) Prepare(l logger.Logger) error {
 	return nil
 }
 
-func (res *smResource) Generate(l logger.Logger) (err error) {
+func (res *Resource) Generate(l logger.Logger) (err error) {
 	if res.isVirtual && res.client == nil {
 		if res.uuid == "" {
 			res.Blueprint, err = renderString(res.ID+"/blueprint", res.Blueprint, res.Attributes)
@@ -102,7 +102,7 @@ func (res *smResource) Generate(l logger.Logger) (err error) {
 	return sess.Run(`/usr/bin/env bash -c "mkdir -p /tmp/smutje && mkdir -p /var/lib/smutje"`)
 }
 
-func (res *smResource) Provision(l logger.Logger) (err error) {
+func (res *Resource) Provision(l logger.Logger) (err error) {
 	l = l.Tag(res.ID)
 
 	for _, pkg := range res.Packages {
@@ -113,7 +113,7 @@ func (res *smResource) Provision(l logger.Logger) (err error) {
 	return nil
 }
 
-func (res *smResource) initializeClient() (err error) {
+func (res *Resource) initializeClient() (err error) {
 	var ok bool
 	switch _, ok = res.Attributes["Hypervisor"]; {
 	case ok:
