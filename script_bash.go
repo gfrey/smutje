@@ -25,7 +25,7 @@ func (s *bashScript) Hash() string {
 }
 
 func (s *bashScript) Prepare(attrs smAttributes, prevHash string) (string, error) {
-	script, err := renderString(s.ID, "set -ex\n"+s.Script+"\n", attrs)
+	script, err := renderString(s.ID, "set -e\n"+s.Script+"\n", attrs)
 	if err != nil {
 		return "", err
 	}
