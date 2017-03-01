@@ -9,15 +9,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
 type smartOS struct {
 	addr   string
 	user   string
-	client connection.Client
+	client gconn.Client
 }
 
 func NewSmartOSHypervisor(addr string) (Client, error) {
@@ -25,21 +25,21 @@ func NewSmartOSHypervisor(addr string) (Client, error) {
 	hp := new(smartOS)
 	hp.addr = addr
 	hp.user = "root"
-	hp.client, err = connection.NewSSHClient(hp.addr, hp.user)
+	hp.client, err = gconn.NewSSHClient(hp.addr, hp.user)
 	return hp, err
 }
 
-func (hp *smartOS) ConnectVRes(uuid string) (connection.Client, error) {
-	sshClient, err := connection.NewSSHClient(hp.addr, hp.user)
+func (hp *smartOS) ConnectVRes(uuid string) (gconn.Client, error) {
+	sshClient, err := gconn.NewSSHClient(hp.addr, hp.user)
 	if err != nil {
 		return nil, err
 	}
-	return connection.NewWrappedClient(sshClient, "zlogin "+uuid), nil
+	return gconn.NewWrappedClient(sshClient, "zlogin "+uuid), nil
 }
 
 func (hp *smartOS) UUID(alias string) (string, error) {
 	// determine whether the VM in question already exists
-	sess, err := hp.client.NewSession()
+	sess, err := hp.client.NewSession("vmadm", "list", "-p")
 	if err != nil {
 		return "", err
 	}
@@ -49,7 +49,7 @@ func (hp *smartOS) UUID(alias string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := sess.Start("vmadm list -p"); err != nil {
+	if err := sess.Start(); err != nil {
 		return "", err
 	}
 
@@ -77,7 +77,7 @@ func (hp *smartOS) UUID(alias string) (string, error) {
 	return "", nil
 }
 
-func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
+func (hp *smartOS) Create(l glog.Logger, blueprint string) (string, error) {
 	m := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(blueprint), &m); err != nil {
 		return "", errors.Wrap(err, "failed to unmarshal the blueprint")
@@ -95,7 +95,7 @@ func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
 	}
 
 	// determine whether the VM in question already exists
-	sess, err := hp.client.NewSession()
+	sess, err := hp.client.NewSession("vmadm", "create")
 	if err != nil {
 		return "", err
 	}
@@ -125,7 +125,7 @@ func (hp *smartOS) Create(l logger.Logger, blueprint string) (string, error) {
 	}()
 
 	l.Printf("creating the virtual resource")
-	if err := sess.Run("vmadm create"); err != nil {
+	if err := sess.Run(); err != nil {
 		log.Printf("failed: %s", outBuf.String())
 		return "", err
 	}

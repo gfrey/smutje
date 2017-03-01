@@ -1,15 +1,15 @@
 package hypervisor
 
 import (
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
 type Client interface {
-	Create(l logger.Logger, blueprint string) (string, error)
+	Create(l glog.Logger, blueprint string) (string, error)
 	UUID(alias string) (string, error)
-	ConnectVRes(uuid string) (connection.Client, error)
+	ConnectVRes(uuid string) (gconn.Client, error)
 }
 
 func New(attributes map[string]string) (Client, error) {

@@ -1,13 +1,14 @@
 package smutje
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io"
-	"path/filepath"
 	"os"
-	"crypto/md5"
-	"github.com/gfrey/smutje/logger"
-	"github.com/gfrey/smutje/connection"
+	"path/filepath"
+
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -19,9 +20,9 @@ type execWriteFileCmd struct {
 
 	Render bool
 
-	attrs  Attributes
-	hash   string
-	size   int64
+	attrs Attributes
+	hash  string
+	size  int64
 }
 
 func newExecWriteFileCmd(path string, args []string) (*execWriteFileCmd, error) {
@@ -90,14 +91,22 @@ func (a *execWriteFileCmd) read() (io.ReadCloser, error) {
 	return os.Open(a.Source)
 }
 
-func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) error {
+func (a *execWriteFileCmd) Exec(l glog.Logger, clients gconn.Client) error {
 	r, err := a.read()
 	if err != nil {
 		return err
 	}
 	defer r.Close()
 
-	sess, err := clients.NewLoggedSession(l)
+	l.Printf("writing file %q", a.Target)
+	setFilePerms := ""
+	// TODO is possible to set only one of the both?
+	if a.Owner != "" && a.Umask != "" {
+		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
+	}
+
+	cmd := fmt.Sprintf("{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && cat - > %[1]s%[2]s", a.Target, setFilePerms)
+	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", cmd)
 	if err != nil {
 		return err
 	}
@@ -108,15 +117,7 @@ func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) erro
 		return errors.Wrap(err, "failed to receive stdin pipe")
 	}
 
-	l.Printf("writing file %q", a.Target)
-	setFilePerms := ""
-	// TODO is possible to set only one of the both?
-	if a.Owner != "" && a.Umask != "" {
-		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
-	}
-
-	cmd := fmt.Sprintf(`/usr/bin/env bash -c "{ dir=$(dirname %[1]s); test -d \${dir} || mkdir -p \${dir}; } && cat - > %[1]s`+setFilePerms+`"`, a.Target)
-	if err := sess.Start(cmd); err != nil {
+	if err := sess.Start(); err != nil {
 		return err
 	}
 
@@ -134,4 +135,3 @@ func (a *execWriteFileCmd) Exec(l logger.Logger, clients connection.Client) erro
 func (*execWriteFileCmd) MustExecute() bool {
 	return false
 }
-

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
+	"github.com/pkg/errors"
 )
 
 type bashScript struct {
@@ -35,8 +36,11 @@ func (s *bashScript) Prepare(attrs Attributes, prevHash string) (string, error) 
 	return s.hash, nil
 }
 
-func (s *bashScript) Exec(l logger.Logger, client connection.Client) error {
-	sess, err := client.NewLoggedSession(l)
+func (s *bashScript) Exec(l glog.Logger, client gconn.Client) error {
+	fname := fmt.Sprintf("/var/lib/smutje/%s.sh", s.hash)
+	cmd := fmt.Sprintf("cat - > %[1]s && bash -l %[1]s", fname)
+
+	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", cmd)
 	if err != nil {
 		return err
 	}
@@ -50,9 +54,7 @@ func (s *bashScript) Exec(l logger.Logger, client connection.Client) error {
 	}
 	defer stdin.Close()
 
-	fname := fmt.Sprintf("/var/lib/smutje/%s.sh", s.hash)
-	cmd := fmt.Sprintf(`/usr/bin/env bash -c "cat - > %[1]s && bash -l %[1]s"`, fname)
-	if err := sess.Start(cmd); err != nil {
+	if err := sess.Start(); err != nil {
 		return err
 	}
 

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/gfrey/gbox"
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -21,13 +21,13 @@ func NewGBoxHypervisor() (Client, error) {
 	return new(gboxClient), nil
 }
 
-func (hp *gboxClient) ConnectVRes(name string) (connection.Client, error) {
+func (hp *gboxClient) ConnectVRes(name string) (gconn.Client, error) {
 	addr, err := gbox.ReadProperty(name, "/VirtualBox/GuestInfo/Net/1/V4/IP")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get IP of vbox")
 	}
 
-	return connection.NewSSHClient(addr, "ubuntu")
+	return gconn.NewSSHClient(addr, "ubuntu")
 }
 
 func (hp *gboxClient) UUID(name string) (string, error) {
@@ -42,7 +42,7 @@ func (hp *gboxClient) UUID(name string) (string, error) {
 
 }
 
-func (hp *gboxClient) Create(l logger.Logger, blueprint string) (string, error) {
+func (hp *gboxClient) Create(l glog.Logger, blueprint string) (string, error) {
 	bp := new(gboxBlueprint)
 	if err := json.Unmarshal([]byte(blueprint), &bp); err != nil {
 		return "", errors.Wrap(err, "failed to unmarshal the blueprint")

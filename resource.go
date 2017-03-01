@@ -5,29 +5,29 @@ import (
 
 	"net"
 
-	"github.com/gfrey/smutje/connection"
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/hypervisor"
-	"github.com/gfrey/smutje/logger"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
 )
 
 type Resource struct {
-	ID         string
-	Name       string
-	Blueprint  string
+	ID        string
+	Name      string
+	Blueprint string
 
 	Attributes Attributes
 	Packages   []*smPackage
 
-	client     connection.Client
+	client     gconn.Client
 	hypervisor hypervisor.Client
 	uuid       string
 
-	address    string
-	username   string
+	address  string
+	username string
 
-	isVirtual  bool
+	isVirtual bool
 }
 
 func NewResource(path string, n *parser.AstNode) (*Resource, error) {
@@ -58,7 +58,7 @@ func NewResource(path string, n *parser.AstNode) (*Resource, error) {
 	return res, nil
 }
 
-func (res *Resource) Prepare(l logger.Logger) error {
+func (res *Resource) Prepare(l glog.Logger) error {
 	l = l.Tag(res.ID)
 
 	if err := res.initializeClient(); err != nil {
@@ -73,7 +73,7 @@ func (res *Resource) Prepare(l logger.Logger) error {
 	return nil
 }
 
-func (res *Resource) Generate(l logger.Logger) (err error) {
+func (res *Resource) Generate(l glog.Logger) (err error) {
 	if res.isVirtual && res.client == nil {
 		if res.uuid == "" {
 			res.Blueprint, err = renderString(res.ID+"/blueprint", res.Blueprint, res.Attributes)
@@ -93,16 +93,16 @@ func (res *Resource) Generate(l logger.Logger) (err error) {
 		}
 	}
 
-	sess, err := res.client.NewSession()
+	sess, err := res.client.NewSession("/usr/bin/env", "bash", "-c", "mkdir -p /tmp/smutje && mkdir -p /var/lib/smutje")
 	if err != nil {
 		return err
 	}
 	defer sess.Close()
 
-	return sess.Run(`/usr/bin/env bash -c "mkdir -p /tmp/smutje && mkdir -p /var/lib/smutje"`)
+	return sess.Run()
 }
 
-func (res *Resource) Provision(l logger.Logger) (err error) {
+func (res *Resource) Provision(l glog.Logger) (err error) {
 	l = l.Tag(res.ID)
 
 	for _, pkg := range res.Packages {
@@ -154,7 +154,7 @@ func (res *Resource) initializeClient() (err error) {
 		}
 		return err
 	default:
-		res.client, err = connection.NewSSHClient(res.address, res.username)
+		res.client, err = gconn.NewSSHClient(res.address, res.username)
 		return err
 	}
 }

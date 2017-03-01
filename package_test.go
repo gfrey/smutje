@@ -7,23 +7,23 @@ import (
 
 	"bytes"
 
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
+	"github.com/pkg/errors"
 )
 
 const hA = "dc9ca0192ddf659c2a4ee8da844a3a3a"
 const hB = "4d3a06c079be269b23716dfa7b9e7cfb"
 const hC = "0adfc50e475d4271e1c98913e779a720"
 
-const hAE, hAC, hAF = "+"+hA, "."+hA, "-"+hA
-const hBE, hBC, hBF = "+"+hB, "."+hB, "-"+hB
-const hCE, hCC, hCF = "+"+hC, "."+hC, "-"+hC
-
+const hAE, hAC, hAF = "+" + hA, "." + hA, "-" + hA
+const hBE, hBC, hBF = "+" + hB, "." + hB, "-" + hB
+const hCE, hCC, hCF = "+" + hC, "." + hC, "-" + hC
 
 func TestProvision(t *testing.T) {
-	l := logger.NewDiscard()
+	l := glog.NewDiscard()
 
 	tt := []struct {
 		curState []string
@@ -50,7 +50,7 @@ func TestProvision(t *testing.T) {
 
 		// consider that cached elements won't result in execution (that is why the fail idx doesn't change
 		{[]string{hAE, "+b", "+c"}, 0, []string{hAC, hBF}},
-		{[]string{hAC, hBE,  "+c"}, 0, []string{hAC, hBC, hCF}},
+		{[]string{hAC, hBE, "+c"}, 0, []string{hAC, hBC, hCF}},
 	}
 
 	for i, tti := range tt {
@@ -102,30 +102,29 @@ func TestProvision(t *testing.T) {
 }
 
 type testClient struct {
-	failIdx    int
-	curIdx     int
+	failIdx int
+	curIdx  int
 
 	expCommand string
 	cmdOutput  string
 }
 
-func (tc *testClient) Name() string {
-	return "testClient"
-}
-
-func (tc *testClient) NewSession() (connection.Session, error) {
+func (tc *testClient) NewSession(cmd string, args ...string) (gconn.Session, error) {
 	s := new(testSession)
+
+	if tc.expCommand != "" {
+		if strings.Contains(cmd, tc.expCommand) || strings.Contains(strings.Join(args, " "), tc.expCommand) {
+			s.Stdout = bytes.NewBufferString(tc.cmdOutput)
+		} else {
+			return nil, errors.Errorf("expected %q to contain %q, it didn't", cmd, tc.expCommand)
+		}
+	}
+
 	if tc.curIdx == tc.failIdx {
 		s.fail = true
 	}
 	tc.curIdx++
-	s.cmdOutput = tc.cmdOutput
-	s.expCommand = tc.expCommand
 	return s, nil
-}
-
-func (tc *testClient) NewLoggedSession(l logger.Logger) (connection.Session, error) {
-	return tc.NewSession()
 }
 
 func (tc *testClient) Close() error {
@@ -133,11 +132,11 @@ func (tc *testClient) Close() error {
 }
 
 type testSession struct {
-	Stdin      *bytes.Buffer
-	Stdout     *bytes.Buffer
-	Stderr     *bytes.Buffer
+	Stdin  *bytes.Buffer
+	Stdout *bytes.Buffer
+	Stderr *bytes.Buffer
 
-	fail       bool
+	fail bool
 
 	expCommand string
 	cmdOutput  string
@@ -153,26 +152,25 @@ func (ts *testSession) StdinPipe() (io.WriteCloser, error) {
 }
 
 func (ts *testSession) StdoutPipe() (io.Reader, error) {
-	ts.Stdout = bytes.NewBuffer(nil)
+	if ts.Stdout == nil {
+		ts.Stdout = bytes.NewBuffer(nil)
+	}
 	return ts.Stdout, nil
 }
+
 func (ts *testSession) StderrPipe() (io.Reader, error) {
 	ts.Stderr = bytes.NewBuffer(nil)
 	return ts.Stderr, nil
 }
 
-func (ts *testSession) Run(cmd string) error {
+func (ts *testSession) Run() error {
+	if err := ts.Start(); err != nil {
+		return err
+	}
 	return ts.Wait()
 }
 
-func (ts *testSession) Start(cmd string) error {
-	if ts.expCommand != "" {
-		if strings.Contains(cmd, ts.expCommand) {
-			ts.Stdout.WriteString(ts.cmdOutput)
-		} else {
-			return errors.Errorf("expected %q to contain %q, it didn't", cmd, ts.expCommand)
-		}
-	}
+func (ts *testSession) Start() error {
 	return nil
 }
 

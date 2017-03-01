@@ -2,21 +2,22 @@ package smutje
 
 import (
 	"bufio"
-	"strings"
 	"crypto/md5"
 	"fmt"
-	"github.com/gfrey/smutje/logger"
-	"github.com/gfrey/smutje/connection"
 	"os"
-	"github.com/pkg/errors"
 	"strconv"
+	"strings"
+
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
+	"github.com/pkg/errors"
 )
 
 type execInjectPasswordsCmd struct {
 	Passwords []string
 
 	values map[string]string
-	hash string
+	hash   string
 
 	cache map[string]string
 }
@@ -57,13 +58,12 @@ func (a *execInjectPasswordsCmd) Prepare(attrs Attributes, prevHash string) (str
 		attrs["PASSWORD_"+pwdName+"_QUOTED"] = strconv.Quote(pwd)
 	}
 
-
 	a.hash = fmt.Sprintf("%x", hash.Sum(nil))
 	return a.hash, nil
 }
 
-func (a *execInjectPasswordsCmd) Exec(l logger.Logger, clients connection.Client) error {
-	sess, err := clients.NewLoggedSession(l)
+func (a *execInjectPasswordsCmd) Exec(l glog.Logger, clients gconn.Client) error {
+	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", "cat - > /tmp/smutje/passwords")
 	if err != nil {
 		return err
 	}
@@ -76,8 +76,7 @@ func (a *execInjectPasswordsCmd) Exec(l logger.Logger, clients connection.Client
 		return errors.Wrap(err, "failed to receive stdin pipe")
 	}
 
-	cmd := fmt.Sprintf(`/usr/bin/env bash -c "cat - > /tmp/smutje/passwords"`)
-	if err := sess.Start(cmd); err != nil {
+	if err := sess.Start(); err != nil {
 		return err
 	}
 
@@ -128,9 +127,8 @@ func (a *execInjectPasswordsCmd) getPassword(name string) (string, error) {
 		a.cache = cache
 	}
 	pwd, found := a.cache[name]
-	if ! found {
+	if !found {
 		return "", errors.Errorf("password %q not found", name)
 	}
 	return pwd, nil
 }
-

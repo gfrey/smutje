@@ -9,21 +9,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
 )
 
 type smPackage struct {
-	Name       string
-	ID         string
+	Name string
+	ID   string
 
 	Attributes Attributes
 	Scripts    []smScript
 
-	state      []string
-	isDirty    bool
+	state   []string
+	isDirty bool
 }
 
 func newPackage(parentID, path string, attrs Attributes, n *parser.AstNode) (*smPackage, error) {
@@ -68,7 +68,7 @@ func newPackage(parentID, path string, attrs Attributes, n *parser.AstNode) (*sm
 	return pkg, nil
 }
 
-func (pkg *smPackage) Prepare(client connection.Client, attrs Attributes) (err error) {
+func (pkg *smPackage) Prepare(client gconn.Client, attrs Attributes) (err error) {
 	if client != nil { // If a virtual resource doesn't exist yet, the client is nil!
 		pkg.state, err = pkg.readPackageState(client)
 		if err != nil {
@@ -112,7 +112,7 @@ func (pkg *smPackage) firstToExec() int {
 	return -1 // all hashes valid, so nothing to do
 }
 
-func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) (err error) {
+func (pkg *smPackage) Provision(l glog.Logger, client gconn.Client) (err error) {
 	l = l.Tag(pkg.ID)
 
 	firstToExec := pkg.firstToExec()
@@ -149,8 +149,11 @@ func (pkg *smPackage) Provision(l logger.Logger, client connection.Client) (err 
 	return nil
 }
 
-func (pkg *smPackage) readPackageState(client connection.Client) ([]string, error) {
-	sess, err := client.NewSession()
+func (pkg *smPackage) readPackageState(client gconn.Client) ([]string, error) {
+	fname := fmt.Sprintf("/var/lib/smutje/%s.log", pkg.ID)
+	cmd := fmt.Sprintf(`if [[ -f "%[1]s" ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi`, fname)
+
+	sess, err := client.NewSession("/usr/bin/env", "bash", "-c", cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +164,7 @@ func (pkg *smPackage) readPackageState(client connection.Client) ([]string, erro
 		return nil, err
 	}
 
-	fname := fmt.Sprintf("/var/lib/smutje/%s.log", pkg.ID)
-	cmd := fmt.Sprintf(`/usr/bin/env bash -c "if [[ -f '%[1]s' ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi"`, fname)
-	if err := sess.Start(cmd); err != nil {
+	if err := sess.Start(); err != nil {
 		return nil, err
 	}
 
@@ -192,8 +193,12 @@ func (pkg *smPackage) readPackageState(client connection.Client) ([]string, erro
 	return state, errors.Wrap(sc.Err(), "failed to scan output")
 }
 
-func (pkg *smPackage) writeTargetState(client connection.Client) error {
-	sess, err := client.NewSession()
+func (pkg *smPackage) writeTargetState(client gconn.Client) error {
+	tstamp := time.Now().UTC().Format("20060102T150405")
+	filename := fmt.Sprintf("/var/lib/smutje/%s.%s.log", pkg.ID, tstamp)
+	cmd := fmt.Sprintf(`rm -Rf /tmp/smutje/*; cat - > %[1]s && ln -sf %[1]s /var/lib/smutje/%[2]s.log`, filename, pkg.ID)
+
+	sess, err := client.NewSession("/usr/bin/env", "bash", "c", cmd)
 	if err != nil {
 		return err
 	}
@@ -204,10 +209,7 @@ func (pkg *smPackage) writeTargetState(client connection.Client) error {
 		return errors.Wrap(err, "failed to receive stdin pipe")
 	}
 
-	tstamp := time.Now().UTC().Format("20060102T150405")
-	filename := fmt.Sprintf("/var/lib/smutje/%s.%s.log", pkg.ID, tstamp)
-	cmd := fmt.Sprintf(`/usr/bin/env bash -c "rm -Rf /tmp/smutje/*; cat - > %[1]s && ln -sf %[1]s /var/lib/smutje/%[2]s.log"`, filename, pkg.ID)
-	if err := sess.Start(cmd); err != nil {
+	if err := sess.Start(); err != nil {
 		return err
 	}
 

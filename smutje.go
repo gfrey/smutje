@@ -2,7 +2,8 @@ package smutje
 
 import (
 	"path/filepath"
-	"github.com/gfrey/smutje/logger"
+
+	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
 )
@@ -28,7 +29,7 @@ func convertToTarget(path string, astN *parser.AstNode) (*Resource, error) {
 }
 
 func Provision(res *Resource) error {
-	l := logger.New()
+	l := glog.New()
 	if err := res.Prepare(l); err != nil {
 		return err
 	}

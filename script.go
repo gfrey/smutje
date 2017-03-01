@@ -1,15 +1,15 @@
 package smutje
 
 import (
-	"github.com/gfrey/smutje/connection"
-	"github.com/gfrey/smutje/logger"
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
 )
 
 type smScript interface {
 	Prepare(attrs Attributes, prevHash string) (string, error)
-	Exec(l logger.Logger, client connection.Client) error
+	Exec(l glog.Logger, client gconn.Client) error
 	Hash() string
 	MustExecute() bool
 }

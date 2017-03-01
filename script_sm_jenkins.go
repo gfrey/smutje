@@ -1,14 +1,15 @@
 package smutje
 
 import (
-	"github.com/gfrey/smutje/logger"
-	"github.com/gfrey/smutje/connection"
-	"fmt"
-	"net/http"
 	"bytes"
-	"io"
-	"strings"
 	"crypto/md5"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
+	"github.com/gfrey/gconn"
+	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -74,13 +75,7 @@ func (a *execJenkinsArtifactCmd) Prepare(attrs Attributes, prevHash string) (str
 	return a.hash, nil
 }
 
-func (a *execJenkinsArtifactCmd) Exec(l logger.Logger, client connection.Client) error {
-	sess, err := client.NewLoggedSession(l)
-	if err != nil {
-		return err
-	}
-	defer sess.Close()
-
+func (a *execJenkinsArtifactCmd) Exec(l glog.Logger, client gconn.Client) error {
 	l.Printf("downloading file %q from %q", a.Target, a.url)
 	setFilePerms := ""
 	// TODO is possible to set only one of the both?
@@ -88,8 +83,14 @@ func (a *execJenkinsArtifactCmd) Exec(l logger.Logger, client connection.Client)
 		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
 	}
 
-	cmd := fmt.Sprintf(`/usr/bin/env bash -c "{ dir=$(dirname %[1]s); test -d \${dir} || mkdir -p \${dir}; } && curl -sSL %[2]s -o %[1]s`+setFilePerms+`"`, a.Target, a.url)
-	if err := sess.Start(cmd); err != nil {
+	cmd := fmt.Sprintf("{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && curl -sSL %[2]s -o %[1]s %[3]s", a.Target, a.url, setFilePerms)
+	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", cmd)
+	if err != nil {
+		return err
+	}
+	defer sess.Close()
+
+	if err := sess.Start(); err != nil {
 		return err
 	}
 
@@ -99,4 +100,3 @@ func (a *execJenkinsArtifactCmd) Exec(l logger.Logger, client connection.Client)
 func (*execJenkinsArtifactCmd) MustExecute() bool {
 	return false
 }
-
