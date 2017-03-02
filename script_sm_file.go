@@ -106,7 +106,7 @@ func (a *execWriteFileCmd) Exec(l glog.Logger, clients gconn.Client) error {
 	}
 
 	cmd := fmt.Sprintf("{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && cat - > %[1]s%[2]s", a.Target, setFilePerms)
-	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", cmd)
+	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {
 		return err
 	}

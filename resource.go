@@ -93,7 +93,7 @@ func (res *Resource) Generate(l glog.Logger) (err error) {
 		}
 	}
 
-	sess, err := res.client.NewSession("/usr/bin/env", "bash", "-c", "mkdir -p /tmp/smutje && mkdir -p /var/lib/smutje")
+	sess, err := res.client.NewSession("/usr/bin/env", "bash", "-c", `"mkdir -p /tmp/smutje && mkdir -p /var/lib/smutje"`)
 	if err != nil {
 		return err
 	}

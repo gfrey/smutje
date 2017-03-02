@@ -40,7 +40,7 @@ func (s *bashScript) Exec(l glog.Logger, client gconn.Client) error {
 	fname := fmt.Sprintf("/var/lib/smutje/%s.sh", s.hash)
 	cmd := fmt.Sprintf("cat - > %[1]s && bash -l %[1]s", fname)
 
-	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", cmd)
+	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {
 		return err
 	}

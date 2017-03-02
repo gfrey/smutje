@@ -84,7 +84,7 @@ func (a *execJenkinsArtifactCmd) Exec(l glog.Logger, client gconn.Client) error 
 	}
 
 	cmd := fmt.Sprintf("{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && curl -sSL %[2]s -o %[1]s %[3]s", a.Target, a.url, setFilePerms)
-	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", cmd)
+	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {
 		return err
 	}

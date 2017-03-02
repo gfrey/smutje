@@ -63,7 +63,7 @@ func (a *execInjectPasswordsCmd) Prepare(attrs Attributes, prevHash string) (str
 }
 
 func (a *execInjectPasswordsCmd) Exec(l glog.Logger, clients gconn.Client) error {
-	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", "cat - > /tmp/smutje/passwords")
+	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", `"cat - >> /tmp/smutje/passwords"`)
 	if err != nil {
 		return err
 	}

@@ -153,7 +153,7 @@ func (pkg *smPackage) readPackageState(client gconn.Client) ([]string, error) {
 	fname := fmt.Sprintf("/var/lib/smutje/%s.log", pkg.ID)
 	cmd := fmt.Sprintf(`if [[ -f "%[1]s" ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi`, fname)
 
-	sess, err := client.NewSession("/usr/bin/env", "bash", "-c", cmd)
+	sess, err := client.NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (pkg *smPackage) writeTargetState(client gconn.Client) error {
 	filename := fmt.Sprintf("/var/lib/smutje/%s.%s.log", pkg.ID, tstamp)
 	cmd := fmt.Sprintf(`rm -Rf /tmp/smutje/*; cat - > %[1]s && ln -sf %[1]s /var/lib/smutje/%[2]s.log`, filename, pkg.ID)
 
-	sess, err := client.NewSession("/usr/bin/env", "bash", "c", cmd)
+	sess, err := client.NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {
 		return err
 	}
