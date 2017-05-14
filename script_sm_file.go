@@ -99,13 +99,12 @@ func (a *execWriteFileCmd) Exec(l glog.Logger, clients gconn.Client) error {
 	defer r.Close()
 
 	l.Printf("writing file %q", a.Target)
-	setFilePerms := ""
+	rawCmd := "{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && cat - > %[1]s"
 	// TODO is possible to set only one of the both?
 	if a.Owner != "" && a.Umask != "" {
-		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
+		rawCmd += " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
 	}
-
-	cmd := fmt.Sprintf("{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && cat - > %[1]s%[2]s", a.Target, setFilePerms)
+	cmd := fmt.Sprintf(rawCmd, a.Target)
 	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {
 		return err
