@@ -30,6 +30,10 @@ func convertToTarget(path string, astN *parser.AstNode) (*Resource, error) {
 
 func Provision(res *Resource) error {
 	l := glog.New()
+	return provision(l, res)
+}
+
+func provision(l glog.Logger, res *Resource) error {
 	if err := res.Prepare(l); err != nil {
 		return err
 	}
@@ -39,4 +43,20 @@ func Provision(res *Resource) error {
 	}
 
 	return res.Provision(l)
+}
+
+func ProvisionHost(l glog.Logger, host, template string) error {
+	astN, err := parser.ParseString(template)
+	if err != nil {
+		return err
+	}
+
+	res, err := convertToTarget(host, astN)
+	if err != nil {
+		return err
+	}
+
+	res.Address = host
+
+	return provision(l, res)
 }

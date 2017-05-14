@@ -15,7 +15,11 @@ func Parse(filename string) (*AstNode, error) {
 		return nil, errors.Wrap(err, "failed to read file")
 	}
 
-	return parse(filename, lex(string(input)))
+	return ParseString(filename, string(input))
+}
+
+func ParseString(name, template string) (*AstNode, error) {
+	return parse(name, lex(template))
 }
 
 type parser struct {
