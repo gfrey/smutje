@@ -151,7 +151,7 @@ func (pkg *smPackage) Provision(l glog.Logger, client gconn.Client) (err error) 
 
 func (pkg *smPackage) readPackageState(client gconn.Client) ([]string, error) {
 	fname := fmt.Sprintf("/var/lib/smutje/%s.log", pkg.ID)
-	cmd := fmt.Sprintf(`if [[ -f "%[1]s" ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi`, fname)
+	cmd := fmt.Sprintf(`if [[ -f '%[1]s' ]]; then cat %[1]s; else mkdir -p /var/lib/smutje; fi`, fname)
 
 	sess, err := client.NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
 	if err != nil {

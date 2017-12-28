@@ -104,8 +104,8 @@ func (a *execWriteFileCmd) Exec(l glog.Logger, clients gconn.Client) error {
 	if a.Owner != "" && a.Umask != "" {
 		rawCmd += " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
 	}
-	cmd := fmt.Sprintf(rawCmd, a.Target)
-	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
+	cmd := fmt.Sprintf("'"+rawCmd+"'", a.Target)
+	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "sh", "-c", cmd)
 	if err != nil {
 		return err
 	}

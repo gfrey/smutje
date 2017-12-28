@@ -77,14 +77,14 @@ func (a *execJenkinsArtifactCmd) Prepare(attrs Attributes, prevHash string) (str
 
 func (a *execJenkinsArtifactCmd) Exec(l glog.Logger, client gconn.Client) error {
 	l.Printf("downloading file %q from %q", a.Target, a.url)
-	setFilePerms := ""
+	rawCmd := "{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && curl -sSL %[2]s -o %[1]s"
 	// TODO is possible to set only one of the both?
 	if a.Owner != "" && a.Umask != "" {
-		setFilePerms = " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
+		rawCmd += " && chown " + a.Owner + " %[1]s && chmod " + a.Umask + " %[1]s"
 	}
 
-	cmd := fmt.Sprintf("{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && curl -sSL %[2]s -o %[1]s %[3]s", a.Target, a.url, setFilePerms)
-	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", fmt.Sprintf("%q", cmd))
+	cmd := fmt.Sprintf("'"+rawCmd+"'", a.Target, a.url)
+	sess, err := gconn.NewLoggedClient(l, client).NewSession("/usr/bin/env", "bash", "-c", cmd)
 	if err != nil {
 		return err
 	}

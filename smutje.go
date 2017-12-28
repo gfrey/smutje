@@ -46,7 +46,7 @@ func provision(l glog.Logger, res *Resource) error {
 }
 
 func ProvisionHost(l glog.Logger, host, template string) error {
-	astN, err := parser.ParseString(template)
+	astN, err := parser.ParseString(host, template)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func ProvisionHost(l glog.Logger, host, template string) error {
 		return err
 	}
 
-	res.Address = host
+	res.address = host
 
 	return provision(l, res)
 }
