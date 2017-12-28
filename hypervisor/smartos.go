@@ -30,11 +30,81 @@ func NewSmartOSHypervisor(addr string) (Client, error) {
 }
 
 func (hp *smartOS) ConnectVRes(uuid string) (gconn.Client, error) {
-	sshClient, err := gconn.NewSSHClient(hp.addr, hp.user)
+	// determine the vm brand
+	brand, err := hp.Brand(uuid)
 	if err != nil {
 		return nil, err
 	}
-	return gconn.NewWrappedClient(sshClient, "zlogin "+uuid), nil
+
+	switch brand {
+	case "kvm":
+		ip, err := hp.KVMIP(uuid)
+		if err != nil {
+			return nil, err
+		}
+		return gconn.NewSSHProxyClient(hp.client, ip, "root")
+	case "joyent":
+		return gconn.NewWrappedClient(hp.client, "zlogin "+uuid), nil
+	default:
+		return nil, errors.Errorf("unknown VM brand: %s", brand)
+	}
+}
+
+func (hp *smartOS) KVMIP(uuid string) (string, error) {
+	sess, err := hp.client.NewSession("vmadm get " + uuid + " | json nics[0].ip")
+	if err != nil {
+		return "", err
+	}
+	defer sess.Close()
+
+	stdout, err := sess.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
+
+	if err := sess.Start(); err != nil {
+		return "", err
+	}
+
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, stdout); err != nil {
+		return "", err
+	}
+
+	if err := sess.Wait(); err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(buf.String()), nil
+}
+
+func (hp *smartOS) Brand(uuid string) (string, error) {
+	// determine whether the VM in question already exists
+	sess, err := hp.client.NewSession("vmadm get " + uuid + " | json brand")
+	if err != nil {
+		return "", err
+	}
+	defer sess.Close()
+
+	stdout, err := sess.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
+
+	if err := sess.Start(); err != nil {
+		return "", err
+	}
+
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, stdout); err != nil {
+		return "", err
+	}
+
+	if err := sess.Wait(); err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(buf.String()), nil
 }
 
 func (hp *smartOS) UUID(alias string) (string, error) {
@@ -77,6 +147,47 @@ func (hp *smartOS) UUID(alias string) (string, error) {
 	return "", nil
 }
 
+func image_uuid(m map[string]interface{}) (string, error) {
+	u, found := m["image_uuid"]
+	if found {
+		uuid, ok := u.(string)
+		if !ok {
+			return "", errors.Errorf("image_uuid not a string")
+		}
+		return uuid, nil
+	}
+	return "", nil
+}
+
+func image_uuids(m map[string]interface{}) ([]string, error) {
+	uuids := []string{}
+	switch u, err := image_uuid(m); {
+	case err != nil:
+		return nil, err
+	case u != "":
+		uuids = append(uuids, u)
+	}
+
+	disksR, found := m["disks"]
+	if found {
+		disks, ok := disksR.([]map[string]interface{})
+		if !ok {
+			return uuids, nil
+		}
+
+		for _, disk := range disks {
+			switch u, err := image_uuid(disk); {
+			case err != nil:
+				return nil, err
+			case u != "":
+				uuids = append(uuids, u)
+			}
+		}
+	}
+
+	return uuids, nil
+}
+
 func (hp *smartOS) Create(l glog.Logger, blueprint string) (string, error) {
 	m := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(blueprint), &m); err != nil {
@@ -88,10 +199,16 @@ func (hp *smartOS) Create(l glog.Logger, blueprint string) (string, error) {
 		return "", err
 	}
 
-	imgUUID := m["image_uuid"].(string)
-	l.Printf("importing image %s", imgUUID)
-	if err := runCommand(hp.client, "imgadm import -q "+imgUUID); err != nil {
+	imgUUIDs, err := image_uuids(m)
+	if err != nil {
 		return "", err
+	}
+
+	for _, imgUUID := range imgUUIDs {
+		l.Printf("importing image %s", imgUUID)
+		if err := runCommand(hp.client, "imgadm import -q "+imgUUID); err != nil {
+			return "", err
+		}
 	}
 
 	// determine whether the VM in question already exists
