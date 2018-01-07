@@ -1,6 +1,9 @@
 package parser
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParser_TitleFailure(t *testing.T) {
 	tt := []struct {
@@ -11,17 +14,16 @@ func TestParser_TitleFailure(t *testing.T) {
 		{"\n\nfoobar", `stdin:3: unexpected token read: text ("foobar") (expected title)`},
 		{"> foobar", `stdin:1: unexpected token read: arrow (expected title)`},
 		{"  foobar", `stdin:1: unexpected token read: indent (expected title)`},
-		{"# foobar", `stdin:1: expected title format "<Type>: <Name of Section> [<Id>]", got: "foobar"`},
-		{"# foobar: some more", `stdin:1: expected title format "<Type>: <Name of Section> [<Id>]", got: "foobar: some more"`},
-		{"# foobar: some more [invalid!]", `stdin:1: expected title format "<Type>: <Name of Section> [<Id>]", got: "foobar: some more [invalid!]"`},
-		{"# foobar: some more [valid]", `stdin:1: unexpected section type: foobar`},
+		{"# foobar", `invalid title format "# foobar"`},
+		{"# foobar: some more", `invalid title format "# foobar: some more"`},
+		{"# foobar: some more [invalid!]", `invalid title format "# foobar: some more [invalid!]"`},
 	}
 
 	for _, tti := range tt {
-		_, err := parse("stdin", lex(tti.input))
+		_, err := ParseString("stdin", tti.input)
 		if err == nil {
 			t.Errorf("expected error %q, got none", tti.err)
-		} else if err.Error() != tti.err {
+		} else if !strings.HasSuffix(err.Error(), tti.err) {
 			t.Errorf("expected error %q, got %q", tti.err, err)
 		}
 	}
