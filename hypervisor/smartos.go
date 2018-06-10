@@ -243,10 +243,10 @@ func (hp *smartOS) Create(l glog.Logger, blueprint string) (string, error) {
 
 	l.Printf("creating the virtual resource")
 	if err := sess.Run(); err != nil {
+		wg.Wait()
 		log.Printf("failed: %s", outBuf.String())
 		return "", err
 	}
-
 	wg.Wait()
 
 	output := strings.TrimSpace(outBuf.String())
