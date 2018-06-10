@@ -1,4 +1,4 @@
-# Smutje
+# Smutje [![GoDoc](https://godoc.org/github.com/gfrey/smutje?status.svg)](http://godoc.org/github.com/gfrey/smutje) [![Report card](https://goreportcard.com/badge/github.com/gfrey/smutje)](https://goreportcard.com/report/github.com/gfrey/smutje)
 
 NOTE: This is work in progress! It's neither clean nor fully working.
 
