@@ -43,7 +43,7 @@ func (hp *smartOS) ConnectVRes(uuid string) (gconn.Client, error) {
 			return nil, err
 		}
 		return gconn.NewSSHProxyClient(hp.client, ip, "root")
-	case "joyent":
+	case "joyent", "lx":
 		return gconn.NewWrappedClient(hp.client, "zlogin "+uuid), nil
 	default:
 		return nil, errors.Errorf("unknown VM brand: %s", brand)
