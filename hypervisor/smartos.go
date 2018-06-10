@@ -255,5 +255,21 @@ func (hp *smartOS) Create(l glog.Logger, blueprint string) (string, error) {
 		return "", errors.Errorf("wrong response received: %s", output)
 	}
 
-	return strings.TrimPrefix(output, expResponsePrefix), nil
+	vmID := strings.TrimPrefix(output, expResponsePrefix)
+
+	if autostart, ok := m["autostart"].(bool); ok && !autostart {
+		sess, err := hp.client.NewSession("vmadm", "start", vmID)
+		if err != nil {
+			return "", err
+		}
+		defer sess.Close()
+
+		l.Printf("starting the virtual resource")
+		if err := sess.Run(); err != nil {
+			log.Printf("failed to start VM %s", vmID)
+			return "", err
+		}
+	}
+
+	return vmID, nil
 }
