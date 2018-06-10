@@ -1,9 +1,10 @@
 package smutje
 
 import (
+	"log"
+	"os"
 	"path/filepath"
 
-	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
 )
@@ -29,11 +30,11 @@ func convertToTarget(path string, astN *parser.AstNode) (*Resource, error) {
 }
 
 func Provision(res *Resource) error {
-	l := glog.New()
+	l := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	return provision(l, res)
 }
 
-func provision(l glog.Logger, res *Resource) error {
+func provision(l *log.Logger, res *Resource) error {
 	if err := res.Prepare(l); err != nil {
 		return err
 	}
@@ -45,7 +46,7 @@ func provision(l glog.Logger, res *Resource) error {
 	return res.Provision(l)
 }
 
-func ProvisionHost(l glog.Logger, host, template string) error {
+func ProvisionHost(l *log.Logger, host, template string) error {
 	astN, err := parser.ParseString(host, template)
 	if err != nil {
 		return err

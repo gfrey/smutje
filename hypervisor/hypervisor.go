@@ -1,13 +1,14 @@
 package hypervisor
 
 import (
+	"log"
+
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
 type Client interface {
-	Create(l glog.Logger, blueprint string) (string, error)
+	Create(l *log.Logger, blueprint string) (string, error)
 	UUID(alias string) (string, error)
 	ConnectVRes(uuid string) (gconn.Client, error)
 }

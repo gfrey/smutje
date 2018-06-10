@@ -1,6 +1,8 @@
 package smutje
 
 import (
+	"io/ioutil"
+	"log"
 	"testing"
 
 	"io"
@@ -10,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +24,7 @@ const hBE, hBC, hBF = "+" + hB, "." + hB, "-" + hB
 const hCE, hCC, hCF = "+" + hC, "." + hC, "-" + hC
 
 func TestProvision(t *testing.T) {
-	l := glog.NewDiscard()
+	l := log.New(ioutil.Discard, "", 0)
 
 	tt := []struct {
 		curState []string

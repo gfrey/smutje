@@ -5,12 +5,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
 )
@@ -112,8 +112,8 @@ func (pkg *smPackage) firstToExec() int {
 	return -1 // all hashes valid, so nothing to do
 }
 
-func (pkg *smPackage) Provision(l glog.Logger, client gconn.Client) (err error) {
-	l = l.Tag(pkg.ID)
+func (pkg *smPackage) Provision(l *log.Logger, client gconn.Client) (err error) {
+	l = tagLogger(l, pkg.ID)
 
 	firstToExec := pkg.firstToExec()
 	if firstToExec == -1 {

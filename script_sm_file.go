@@ -4,11 +4,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -91,7 +91,7 @@ func (a *execWriteFileCmd) read() (io.ReadCloser, error) {
 	return os.Open(a.Source)
 }
 
-func (a *execWriteFileCmd) Exec(l glog.Logger, clients gconn.Client) error {
+func (a *execWriteFileCmd) Exec(l *log.Logger, clients gconn.Client) error {
 	r, err := a.read()
 	if err != nil {
 		return err

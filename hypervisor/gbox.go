@@ -2,10 +2,10 @@ package hypervisor
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/gfrey/gbox"
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -42,7 +42,7 @@ func (hp *gboxClient) UUID(name string) (string, error) {
 
 }
 
-func (hp *gboxClient) Create(l glog.Logger, blueprint string) (string, error) {
+func (hp *gboxClient) Create(l *log.Logger, blueprint string) (string, error) {
 	bp := new(gboxBlueprint)
 	if err := json.Unmarshal([]byte(blueprint), &bp); err != nil {
 		return "", errors.Wrap(err, "failed to unmarshal the blueprint")

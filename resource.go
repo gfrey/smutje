@@ -2,11 +2,11 @@ package smutje
 
 import (
 	"fmt"
+	"log"
 
 	"net"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/gfrey/smutje/hypervisor"
 	"github.com/gfrey/smutje/parser"
 	"github.com/pkg/errors"
@@ -58,8 +58,8 @@ func NewResource(path string, n *parser.AstNode) (*Resource, error) {
 	return res, nil
 }
 
-func (res *Resource) Prepare(l glog.Logger) error {
-	l = l.Tag(res.ID)
+func (res *Resource) Prepare(l *log.Logger) error {
+	l = tagLogger(l, res.ID)
 
 	if err := res.initializeClient(); err != nil {
 		return err
@@ -73,7 +73,7 @@ func (res *Resource) Prepare(l glog.Logger) error {
 	return nil
 }
 
-func (res *Resource) Generate(l glog.Logger) (err error) {
+func (res *Resource) Generate(l *log.Logger) (err error) {
 	if res.isVirtual && res.client == nil {
 		if res.uuid == "" {
 			res.Blueprint, err = renderString(res.ID+"/blueprint", res.Blueprint, res.Attributes)
@@ -102,8 +102,8 @@ func (res *Resource) Generate(l glog.Logger) (err error) {
 	return sess.Run()
 }
 
-func (res *Resource) Provision(l glog.Logger) (err error) {
-	l = l.Tag(res.ID)
+func (res *Resource) Provision(l *log.Logger) (err error) {
+	l = tagLogger(l, res.ID)
 
 	for _, pkg := range res.Packages {
 		if err := pkg.Provision(l, res.client); err != nil {

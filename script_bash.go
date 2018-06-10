@@ -4,11 +4,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 
 	"strings"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -36,7 +36,7 @@ func (s *bashScript) Prepare(attrs Attributes, prevHash string) (string, error) 
 	return s.hash, nil
 }
 
-func (s *bashScript) Exec(l glog.Logger, client gconn.Client) error {
+func (s *bashScript) Exec(l *log.Logger, client gconn.Client) error {
 	fname := fmt.Sprintf("/var/lib/smutje/%s.sh", s.hash)
 	cmd := fmt.Sprintf("cat - > %[1]s && bash -l %[1]s", fname)
 

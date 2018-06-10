@@ -5,11 +5,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -75,7 +75,7 @@ func (a *execJenkinsArtifactCmd) Prepare(attrs Attributes, prevHash string) (str
 	return a.hash, nil
 }
 
-func (a *execJenkinsArtifactCmd) Exec(l glog.Logger, client gconn.Client) error {
+func (a *execJenkinsArtifactCmd) Exec(l *log.Logger, client gconn.Client) error {
 	l.Printf("downloading file %q from %q", a.Target, a.url)
 	rawCmd := "{ dir=$(dirname %[1]s); test -d ${dir} || mkdir -p ${dir}; } && curl -sSL %[2]s -o %[1]s"
 	// TODO is possible to set only one of the both?

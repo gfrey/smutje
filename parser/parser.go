@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"git.gf-hh.net/gmd"
+	"github.com/gfrey/gmd"
 	"github.com/pkg/errors"
 )
 

@@ -1,10 +1,10 @@
 package smutje
 
 import (
+	"log"
 	"strings"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +27,7 @@ func (s *smutjeScript) Prepare(attrs Attributes, prevHash string) (string, error
 	return s.Command.Prepare(attrs, prevHash)
 }
 
-func (s *smutjeScript) Exec(l glog.Logger, client gconn.Client) error {
+func (s *smutjeScript) Exec(l *log.Logger, client gconn.Client) error {
 	return s.Command.Exec(l, client)
 }
 

@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"crypto/md5"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -62,7 +62,7 @@ func (a *execInjectPasswordsCmd) Prepare(attrs Attributes, prevHash string) (str
 	return a.hash, nil
 }
 
-func (a *execInjectPasswordsCmd) Exec(l glog.Logger, clients gconn.Client) error {
+func (a *execInjectPasswordsCmd) Exec(l *log.Logger, clients gconn.Client) error {
 	sess, err := gconn.NewLoggedClient(l, clients).NewSession("/usr/bin/env", "bash", "-c", `"cat - >> /tmp/smutje/passwords"`)
 	if err != nil {
 		return err

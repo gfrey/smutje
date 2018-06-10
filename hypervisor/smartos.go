@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/gfrey/gconn"
-	"github.com/gfrey/glog"
 	"github.com/pkg/errors"
 )
 
@@ -188,7 +187,7 @@ func image_uuids(m map[string]interface{}) ([]string, error) {
 	return uuids, nil
 }
 
-func (hp *smartOS) Create(l glog.Logger, blueprint string) (string, error) {
+func (hp *smartOS) Create(l *log.Logger, blueprint string) (string, error) {
 	m := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(blueprint), &m); err != nil {
 		return "", errors.Wrap(err, "failed to unmarshal the blueprint")
