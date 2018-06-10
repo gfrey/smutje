@@ -14,9 +14,9 @@ func TestParser_TitleFailure(t *testing.T) {
 		{"\n\nfoobar", `stdin:3: unexpected token read: text ("foobar") (expected title)`},
 		{"> foobar", `stdin:1: unexpected token read: arrow (expected title)`},
 		{"  foobar", `stdin:1: unexpected token read: indent (expected title)`},
-		{"# foobar", `invalid title format "# foobar"`},
-		{"# foobar: some more", `invalid title format "# foobar: some more"`},
-		{"# foobar: some more [invalid!]", `invalid title format "# foobar: some more [invalid!]"`},
+		{"# foobar", `stdin:1: invalid title format: "# foobar"`},
+		{"# foobar: some more", `stdin:1: invalid title format: "# foobar: some more"`},
+		{"# foobar: some more [invalid!]", `stdin:1: invalid title format: "# foobar: some more [invalid!]"`},
 	}
 
 	for _, tti := range tt {

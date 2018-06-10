@@ -3,6 +3,7 @@ package smutje
 import (
 	"io/ioutil"
 	"log"
+	"net"
 	"testing"
 
 	"io"
@@ -130,6 +131,10 @@ func (tc *testClient) NewSession(cmd string, args ...string) (gconn.Session, err
 
 func (tc *testClient) Close() error {
 	return nil
+}
+
+func (tc *testClient) Dial(n, addr string) (net.Conn, error) {
+	return nil, errors.Errorf("not supported")
 }
 
 type testSession struct {
