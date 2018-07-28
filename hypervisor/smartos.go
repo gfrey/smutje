@@ -19,7 +19,7 @@ type smartOS struct {
 	client gconn.Client
 }
 
-func NewSmartOSHypervisor(addr string) (Client, error) {
+func SmartOS(addr string) (Client, error) {
 	var err error
 	hp := new(smartOS)
 	hp.addr = addr

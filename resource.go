@@ -114,28 +114,18 @@ func (res *Resource) Provision(l *log.Logger) (err error) {
 }
 
 func (res *Resource) initializeClient() (err error) {
-	var ok bool
-	switch _, ok = res.Attributes["Hypervisor"]; {
-	case ok:
-		res.isVirtual = true
-	case res.Blueprint != "":
-		return errors.Errorf("hypervisor attribute required for blueprint to be supported!")
-	default:
-		res.address, ok = res.Attributes["Address"]
-		if !ok {
-			for _, cand := range []string{res.Name, res.ID} {
-				ips, err := net.LookupIP(cand)
-				if err == nil && len(ips) > 0 {
-					res.address = ips[0].String()
-					break
-				}
-			}
-		}
-		if res.address == "" {
-			return fmt.Errorf("Host address attribute not specified!")
-		}
+	var hypervisorType string
+	hypervisorType, res.isVirtual = res.Attributes["Hypervisor"]
+
+	if !res.isVirtual && res.Blueprint != "" {
+		return errors.Errorf("hypervisor must be set, for blueprint to be supported!")
 	}
 
+	if err := res.setAddress(); err != nil {
+		return err
+	}
+
+	var ok bool
 	res.username, ok = res.Attributes["Username"]
 	if !ok {
 		res.username = "root"
@@ -143,9 +133,14 @@ func (res *Resource) initializeClient() (err error) {
 
 	switch {
 	case res.isVirtual:
-		res.hypervisor, err = hypervisor.New(res.Attributes)
-		if err != nil {
-			return err
+		switch hypervisorType {
+		case "smartos":
+			res.hypervisor, err = hypervisor.SmartOS(res.address)
+			if err != nil {
+				return err
+			}
+		default:
+			return errors.Errorf("hypervisor %s not supported", hypervisorType)
 		}
 
 		res.uuid, err = res.hypervisor.UUID(res.ID)
@@ -157,6 +152,32 @@ func (res *Resource) initializeClient() (err error) {
 		res.client, err = gconn.NewSSHClient(res.address, res.username)
 		return err
 	}
+}
+
+func (res *Resource) setAddress() error {
+	var ok bool
+
+	if res.isVirtual {
+		res.address, ok = res.Attributes["Host"]
+		if !ok {
+			return errors.Errorf("no address specified for smartos hypervisor")
+		}
+	} else {
+		res.address, ok = res.Attributes["Address"]
+		if !ok {
+			for _, cand := range []string{res.Name, res.ID} {
+				ips, err := net.LookupIP(cand)
+				if err == nil && len(ips) > 0 {
+					res.address = ips[0].String()
+					break
+				}
+			}
+		}
+	}
+	if res.address == "" {
+		return fmt.Errorf("Host address attribute not specified!")
+	}
+	return nil
 }
 
 func handleChild(parentID, path string, attrs Attributes, node *parser.AstNode) ([]*smPackage, error) {
