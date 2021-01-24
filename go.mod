@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/gfrey/gconn v0.0.0-20180812173902-fae770fe674c
-	github.com/gfrey/gmd v0.0.0-20180610155221-04e6e9dd0617
+	github.com/gfrey/gmd v0.0.0-20210124140030-d78c7cf3a581
 	github.com/gfrey/sshtest v0.0.0-20180812174122-0a185de2fd10 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/jgroeneveld/schema v1.0.0 // indirect

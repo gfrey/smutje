@@ -13,6 +13,8 @@ github.com/gfrey/gconn v0.0.0-20180812173902-fae770fe674c h1:SieY6tfd771sQUjAk6D
 github.com/gfrey/gconn v0.0.0-20180812173902-fae770fe674c/go.mod h1:fUEAk3TNbTMI/CFxcZDouN8iMbno6dp+WceZ+Zxq6D4=
 github.com/gfrey/gmd v0.0.0-20180610155221-04e6e9dd0617 h1:24GSqy2d+5sU4+Yxa+Zt55ZrF4GsoIUQQCXtsRsah+w=
 github.com/gfrey/gmd v0.0.0-20180610155221-04e6e9dd0617/go.mod h1:8nI9dYFb2GcwGWx5wz3xPc5RenPm+6w4iqR5/0rAwIg=
+github.com/gfrey/gmd v0.0.0-20210124140030-d78c7cf3a581 h1:owKHR6+F6/eGZnWI0QEVsRTt6tCyasre/yWsR/lo9KU=
+github.com/gfrey/gmd v0.0.0-20210124140030-d78c7cf3a581/go.mod h1:8nI9dYFb2GcwGWx5wz3xPc5RenPm+6w4iqR5/0rAwIg=
 github.com/gfrey/sshtest v0.0.0-20180812174122-0a185de2fd10 h1:D6WnvxrkKFwtKd+19ZZ2FIuAwwolfLkB78KjoJCSFQs=
 github.com/gfrey/sshtest v0.0.0-20180812174122-0a185de2fd10/go.mod h1:l0LsqpWYvKXxE1xbl34dazlVAjnQhU0ujQyVmLTs7+o=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
