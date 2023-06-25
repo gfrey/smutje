@@ -1,0 +1,39 @@
+schema = 3
+
+[mod]
+  [mod."github.com/gfrey/gconn"]
+    version = "v0.0.0-20180812173902-fae770fe674c"
+    hash = "sha256-aUqjZSOqnvPa8s1LGh5fy6cXFKd1f0vFJr0b1iLw/SQ="
+  [mod."github.com/gfrey/gmd"]
+    version = "v0.0.0-20210124140030-d78c7cf3a581"
+    hash = "sha256-fqghCuXoJLMEAieLJpi7ehsAPbJZGyDjodRRGagNXGQ="
+  [mod."github.com/gfrey/sshtest"]
+    version = "v0.0.0-20180812174122-0a185de2fd10"
+    hash = "sha256-s4m1UhOTcgZ0LHQTc2SC0alnISBVoNRIC0sK62oO7wU="
+  [mod."github.com/hashicorp/errwrap"]
+    version = "v1.0.0"
+    hash = "sha256-LGSLrefkABG1kH1i+GUWiD2/ggJxiZEJ+D2YNbhZjmo="
+  [mod."github.com/hashicorp/go-multierror"]
+    version = "v1.1.0"
+    hash = "sha256-c0zgZsrOoA1+j7N7uIU0ZAUAa7mM8t9nfJgele+/sl4="
+  [mod."github.com/jgroeneveld/schema"]
+    version = "v1.0.0"
+    hash = "sha256-JoWkyzlG2atm60vegK6fNfm7/WQB2VsephO182pNToU="
+  [mod."github.com/jgroeneveld/trial"]
+    version = "v2.0.0+incompatible"
+    hash = "sha256-OsiMjMOhD+8i+HA6KFRCHeU0Clp1kPdGKGgpZuJJTa8="
+  [mod."github.com/pkg/errors"]
+    version = "v0.9.1"
+    hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
+  [mod."github.com/prometheus/common"]
+    version = "v0.9.1"
+    hash = "sha256-kOFltw5OWJozpjLxsJ+2+GmcjOU1kMoYGO1cARb3/oo="
+  [mod."golang.org/x/crypto"]
+    version = "v0.0.0-20200429183012-4b2356b1ed79"
+    hash = "sha256-fRbh1Vd6d0yhZfTEUHo5vbYAwKaUoklVTlW3hE+Yabg="
+  [mod."golang.org/x/sync"]
+    version = "v0.0.0-20200317015054-43a5402ce75a"
+    hash = "sha256-Ve+AX4dxukyC4S016TGyEqgUG7CVz2lEClnigFbO30g="
+  [mod."golang.org/x/sys"]
+    version = "v0.0.0-20190422165155-953cdadca894"
+    hash = "sha256-YkQjSZaiVFxrmXYSKmqrGeIO3RZ95fc3dWyCaR+SosY="
